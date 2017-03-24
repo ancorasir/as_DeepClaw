@@ -1,4 +1,5 @@
 # coding: utf-8
+# author: Xiaoyi He
 import numpy as np
 import cv2
 import sys
@@ -8,7 +9,7 @@ from pylibfreenect2 import createConsoleLogger, setGlobalLogger
 from pylibfreenect2 import LoggerLevel
 
 class ImageSaver(object):
-	"""docstring for ImageSaver"""
+	"""a class for image saving"""
 	def __init__(self):
 		try:
 		    from pylibfreenect2 import OpenCLPacketPipeline
@@ -49,6 +50,13 @@ class ImageSaver(object):
 		self.cap.release()
 
 	def kinect_saver(self, prefix):
+		'''
+		Save the image and depth data captured by kinect camera.
+		Image saves in .jpg fomat, depth data saved as numpy array.
+
+		Args:
+			prefix: the prefix of the save files.
+		'''
 		frames = self.listener.waitForNewFrame()
 		color = frames["color"]
 		depth = frames["depth"]
@@ -57,10 +65,17 @@ class ImageSaver(object):
 		color = cv2.flip(color, 1)
 		# save image in qhd size
 		cv2.imwrite(prefix + '_color.jpg', color)
-		cv2.imwrite(prefix + '_depth.jpg', depth.asarray())
+		# cv2.imwrite(prefix + '_depth.jpg', cv2.flip(depth.asarray(), 1))
+		np.save(prefix + '_depth.npy', cv2.flip(depth.asarray(), 1))
 		self.listener.release(frames)
 
 	def lifcam_saver(self, file_name):
+		'''
+		Save the image captured by Webcam.
+
+		Args:
+			file_name: the file name of the saving image.
+		'''
 		# Capture frame-by-frame
 		ret, frame = self.cap.read()
 		# Our operations on the frame come here
