@@ -3,6 +3,7 @@
 import numpy as np
 import cv2
 import sys
+import platform
 from pylibfreenect2 import Freenect2, SyncMultiFrameListener
 from pylibfreenect2 import FrameType, Registration, Frame
 from pylibfreenect2 import createConsoleLogger, setGlobalLogger
@@ -11,6 +12,8 @@ from pylibfreenect2 import LoggerLevel
 class ImageSaver(object):
 	"""a class for image saving"""
 	def __init__(self):
+		# if run on the Nvidia Jetson, self.platform = 0
+		self.platform = 0 if platform.platform().split('-')[2] == 'tegra' else 1
 		try:
 		    from pylibfreenect2 import OpenCLPacketPipeline
 		    self.pipeline = OpenCLPacketPipeline()
@@ -64,8 +67,9 @@ class ImageSaver(object):
 		                           (int(1920), int(1080)))
 		color = cv2.flip(color, 1)
 		# rgb channels are in reverse order in Nvidia Jetson
-		(r, g, b) = cv2.split(color)
-		color = cv2.merge([b, g, r])
+		if self.platform == 0:
+			(r, g, b) = cv2.split(color)
+			color = cv2.merge([b, g, r])
 		# save image in qhd size
 		cv2.imwrite(prefix + '_color.jpg', color)
 		# cv2.imwrite(prefix + '_depth.jpg', cv2.flip(depth.asarray(), 1))
