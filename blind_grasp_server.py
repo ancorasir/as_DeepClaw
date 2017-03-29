@@ -12,7 +12,7 @@ from image_saver import ImageSaver
 #batch_size = 40
 
 #port and ip address
-ip_port = ('192.168.0.125',8892)
+ip_port = ('192.168.0.104',8892)
 
 #maximum connection number
 connect_num = 100
