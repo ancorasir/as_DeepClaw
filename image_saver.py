@@ -61,7 +61,7 @@ class ImageSaver(object):
 		color = frames["color"]
 		depth = frames["depth"]
 		color = cv2.resize(color.asarray(),
-		                           (int(1920 / 2), int(1080 / 2)))
+		                           (int(1920), int(1080)))
 		color = cv2.flip(color, 1)
 		# save image in qhd size
 		cv2.imwrite(prefix + '_color.jpg', color)
