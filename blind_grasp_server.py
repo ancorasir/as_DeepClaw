@@ -12,14 +12,14 @@ from image_saver import ImageSaver
 #batch_size = 40
 
 #port and ip address
-ip_port = ('192.168.0.116',8892)
+ip_port = ('192.168.0.104',8892)
 
 #maximum connection number
 connect_num = 100
 
 #data folder
 #data_path = './new_data/'
-data_path = './' + time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) + '/'
+data_path = '/media/ubuntu/SIR-128/' + time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) + '/'
 os.mkdir(data_path)
 print '********************************************'
 print 'data path: ' + data_path
