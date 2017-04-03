@@ -23,6 +23,7 @@ class ImageSaver(object):
 
 		self.fn = Freenect2()
 		num_devices = self.fn.enumerateDevices()
+		print(num_devices)
 		if num_devices == 0:
 		    print("No device connected!")
 		    return
@@ -39,18 +40,38 @@ class ImageSaver(object):
 		self.device.start()
 		self.cap = cv2.VideoCapture(0)
 
+		self.serial1 = self.fn.getDeviceSerialNumber(1)
+		self.device1 = self.fn.openDevice(self.serial1, pipeline=self.pipeline)
+
+		self.listener1 = SyncMultiFrameListener(
+		    FrameType.Color | FrameType.Ir | FrameType.Depth)
+		# Register listeners
+		self.device1.setColorFrameListener(self.listener1)
+		self.device1.setIrAndDepthFrameListener(self.listener1)
+
+		self.device1.start()
+		self.cap1 = cv2.VideoCapture(1)
+
 	def __del__(self):
 		self.device.stop()
 		self.device.close()
 		self.cap.release()
 
+		self.device1.stop()
+		self.device1.close()
+		self.cap1.release()
+
 	def kinect_close(self):
 		self.device.stop()
 		self.device.close()
 
+		self.device1.stop()
+		self.device1.close()
+
 	def lifcam_close(self):
 		# When everything done, release the capture
 		self.cap.release()
+		self.cap1.release()
 
 	def kinect_saver(self, prefix):
 		'''
@@ -75,6 +96,22 @@ class ImageSaver(object):
 		# cv2.imwrite(prefix + '_depth.jpg', cv2.flip(depth.asarray(), 1))
 		np.save(prefix + '_depth.npy', cv2.flip(depth.asarray(), 1))
 		self.listener.release(frames)
+
+		frames1 = self.listener1.waitForNewFrame()
+		color = frames1["color"]
+		depth = frames1["depth"]
+		color = cv2.resize(color.asarray(),
+		                           (int(1920), int(1080)))
+		color = cv2.flip(color, 1)
+		# rgb channels are in reverse order in Nvidia Jetson
+		if self.platform == 0:
+			(r, g, b, d) = cv2.split(color)
+			color = cv2.merge([b, g, r])
+		# save image in qhd size
+		cv2.imwrite(prefix + '_color_test.jpg', color)
+		# cv2.imwrite(prefix + '_depth.jpg', cv2.flip(depth.asarray(), 1))
+		np.save(prefix + '_depth_test.npy', cv2.flip(depth.asarray(), 1))
+		self.listener1.release(frames1)
 
 	def lifcam_saver(self, file_name):
 		'''
