@@ -13,7 +13,11 @@ from image_saver2 import ImageSaver
 #batch_size = 40
 
 #port and ip address
+<<<<<<< HEAD
+ip_port = ('192.168.0.108',8892)
+=======
 ip_port = ('192.168.0.116',8892)
+>>>>>>> 452a2feab34a5f24c3e0dc85f65a890d23c84d71
 
 #maximum connection number
 connect_num = 100
@@ -70,7 +74,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 
 	#shot 00 (not use, same as shot 13) 
 	if confirm == 'shot_00':			
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_00')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_00')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_00.png')
 		conn.send(bytes(confirm))
 		print confirm
@@ -81,7 +85,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 01 (used)	
 	elif confirm == 'shot_01':
 		print '***ITF-SMS0***********************************'		
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_01')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_01')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_01.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -91,7 +95,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 1	(uesd)	
 	elif confirm == 'shot_1':
 		print '***ITF-MoSo***********************************'		
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_1')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_1')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_1.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -102,7 +106,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 11 (used)	
 	elif confirm == 'shot_11':	
 		print '***ITF-Pick***********************************'	
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_11')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_11')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_11.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -112,7 +116,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	
 	#shot 12 (used)	
 	elif confirm == 'shot_12':
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_12')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_12')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_12.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -123,7 +127,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	
 	#shot 13 (used)	
 	elif confirm == 'shot_13':
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_13')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_13')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_13.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
