@@ -3,8 +3,7 @@ import socket
 import os, sys
 import csv
 import time
-
-from image_saver2 import ImageSaver
+from image_saver import ImageSaver
 
 #num of batch
 #batch_num = 0
@@ -68,12 +67,13 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	print ''
 	print '***************! '+str(iteration)+' !***************'
 
-	#shot 00 (not use, same as shot 13) 
+	#shot 00 (used) 
 	if confirm == 'shot_00':			
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_00')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_00')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_00.png')
 		conn.send(bytes(confirm))
-		print confirm
+		print 'complete ' + confirm
+		print '**********************************************'
 
 
 
@@ -81,7 +81,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 01 (used)	
 	elif confirm == 'shot_01':
 		print '***ITF-SMS0***********************************'		
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_01')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_01')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_01.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -91,7 +91,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 1	(uesd)	
 	elif confirm == 'shot_1':
 		print '***ITF-MoSo***********************************'		
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_1')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_1')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_1.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -102,7 +102,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	#shot 11 (used)	
 	elif confirm == 'shot_11':	
 		print '***ITF-Pick***********************************'	
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_11')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_11')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_11.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -112,7 +112,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	
 	#shot 12 (used)	
 	elif confirm == 'shot_12':
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_12')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_12')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_12.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -123,7 +123,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	
 	#shot 13 (used)	
 	elif confirm == 'shot_13':
-		img_saver.kinect_saver(data_path + 'cam1_I_' + str(iteration) + '_13')
+		img_saver.kinect_saver(data_path + 'I_' + str(iteration) + '_13')
 		#img_saver.lifcam_saver('cam2_I_' + str(iteration) + '_13.png')
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
@@ -147,15 +147,44 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 		rotate_angle = conn.recv(1024)
 		
 
+		gACT = conn.recv(100)
+		gMOD = conn.recv(100)
+		gGTO = conn.recv(100)
+		gSTA = conn.recv(100)
+		gIMC = conn.recv(100)
+		gFLT = conn.recv(100)
+		gPRE = conn.recv(100)
 		#gripper data
 		conn.send(bytes('gripper'))
-		gACT = conn.recv(100).split()[2]
-		gMOD = conn.recv(100).split()[2]
-		gGTO = conn.recv(100).split()[2]
-		gSTA = conn.recv(100).split()[2]
-		gIMC = conn.recv(100).split()[2]
-		gFLT = conn.recv(100).split()[2]
-		gPRE = conn.recv(100).split()[2]
+		if gACT :
+			gACT = gACT.split()[2]
+		else: gACT = 'N'
+		if gMOD :
+			gMOD = gMOD.split()[2]
+		else: gMOD = 'N'
+		if gGTO:
+			gGTO = gGTO.split()[2]
+		else: gGTO = 'N'
+		if gSTA:
+			gSTA = gSTA.split()[2]
+		else: gSTA = 'N'
+		if gIMC:
+			gIMC = gIMC.split()[2]
+		else: gIMC = 'N'
+		if gFLT:
+			gFLT = gFLT.split()[2]
+		else: gFLT = 'N'
+		if gPRE:
+			gPRE = gPRE.split()[2]
+		else: gPRE = 'N'
+		
+		#gACT = conn.recv(100).split()[2]
+		#gMOD = conn.recv(100).split()[2]
+		#gGTO = conn.recv(100).split()[2]
+		#gSTA = conn.recv(100).split()[2]
+		#gIMC = conn.recv(100).split()[2]
+		#gFLT = conn.recv(100).split()[2]
+		#gPRE = conn.recv(100).split()[2]
 		print gACT.split()
 		print gMOD.split()
 		print gGTO.split()
@@ -225,7 +254,7 @@ def connect_robot(ip_port, connect_num):
 	while True:
 		iteration += 1
 		
-		for i in range(6):
+		for i in range(7):
 			conn,addr = sock.accept()
 			confirm = conn.recv(1024)
 			receive_from_robot(conn,iteration, confirm, fcsv, headers, img_saver)
