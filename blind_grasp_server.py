@@ -3,7 +3,8 @@ import socket
 import os, sys
 import csv
 import time
-from image_saver import ImageSaver
+
+from image_saver2 import ImageSaver
 
 #num of batch
 #batch_num = 0
@@ -12,7 +13,11 @@ from image_saver import ImageSaver
 #batch_size = 40
 
 #port and ip address
+<<<<<<< HEAD
 ip_port = ('192.168.0.108',8892)
+=======
+ip_port = ('192.168.0.116',8892)
+>>>>>>> 452a2feab34a5f24c3e0dc85f65a890d23c84d71
 
 #maximum connection number
 connect_num = 100
