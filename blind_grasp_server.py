@@ -3,6 +3,7 @@ import socket
 import os, sys
 import csv
 import time
+
 from image_saver2 import ImageSaver
 
 #num of batch
@@ -64,6 +65,8 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 	shot 13 	shot the binose the gri
 
 	'''
+	print ''
+	print '***************! '+str(iteration)+' !***************'
 
 	#shot 00 (not use, same as shot 13) 
 	if confirm == 'shot_00':			
@@ -142,9 +145,35 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver):
 		#rotate_angle
 		conn.send(bytes('rotate_angle'))
 		rotate_angle = conn.recv(1024)
-		rows = [{'move_00': random_c_0, 'move_1': random_c_1, 'rotate_angle': rotate_angle}]
+		
+
+		#gripper data
+		conn.send(bytes('gripper'))
+		gACT = conn.recv(100).split()[2]
+		gMOD = conn.recv(100).split()[2]
+		gGTO = conn.recv(100).split()[2]
+		gSTA = conn.recv(100).split()[2]
+		gIMC = conn.recv(100).split()[2]
+		gFLT = conn.recv(100).split()[2]
+		gPRE = conn.recv(100).split()[2]
+		print gACT.split()
+		print gMOD.split()
+		print gGTO.split()
+		print gSTA.split()
+		print gIMC.split()
+		print gFLT.split()
+		print gPRE.split()
+
+		#tcp force 
+		conn.send(bytes('force'))
+		tcp_force = conn.recv(100).split()[0]
 	
 		#save data as csv file
+		rows = [{'move_00': random_c_0, 
+			'move_1': random_c_1, 
+			'rotate_angle': rotate_angle, 
+			'gACT': gACT, 'gMOD': gMOD, 'gGTO':gGTO, 'gSTA':gSTA, 'gIMC': gIMC, 'gFLT': gFLT, 'gPRE': gPRE,
+			'tcp_force': tcp_force }]
 		with open(data_path + 'data.csv', 'a') as f:
 			fcsv = csv.DictWriter(f, headers)
 			fcsv.writerows(rows)
@@ -186,7 +215,7 @@ def connect_robot(ip_port, connect_num):
 
 	#save data in csv file
 	# headers of csv 
-	headers = ['move_00', 'move_1', 'rotate_angle']
+	headers = ['move_00', 'move_1', 'rotate_angle','gACT', 'gMOD','gGTO', 'gSTA', 'gIMC', 'gFLT', 'gPRE','tcp_force']
 	# create csv file
 	with open(data_path + 'data.csv', 'w') as f:
 		fcsv = csv.DictWriter(f, headers)
