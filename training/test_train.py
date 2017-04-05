@@ -18,7 +18,7 @@ import googleGrasp as gg
 
 batch_size = 10
 num_epochs = 2
-learning_rate = 0.01
+learning_rate = 0.005
 
 checkpoint_path = './checkpoint'
 summary_path = './summary'
