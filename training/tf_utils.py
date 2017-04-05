@@ -5,8 +5,7 @@ import pandas as pd
 import os
 
 # src_folder = ''
-src_folder = '/home/ancora-sirlab/arcade_claw_test'
-dis_folder = './'
+
 
 def _floats_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
@@ -18,28 +17,39 @@ def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def tf_writer(src_folder, dis_folder):
+def tf_writer(src_folder, dis_folder, crop_box):
+    """
+    change the datas under src_folder into TFRecord fomat
+
+    Args:
+        src_folder: source folder with image and csv datas
+        dis_folder: directory to save tfrecord file
+        crop_box: cropping area for tray, box=(left, up, right, down)
+    """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
     writer = tf.python_io.TFRecordWriter(os.path.join(dis_folder, src_folder.split('/')[-1] + '.tfrecord'))
 
     data = pd.read_csv(os.path.join(src_folder, 'data.csv'))
-    crop_box = (400, 300, 1040, 840)
-
+    
     for i in range(1, 40):
         img_base = os.path.join(src_folder, 'cam1_I_'+str(i+1))
         img_base_2 = os.path.join(src_folder, 'cam1_I_'+str(i))
         if not os.path.isfile(img_base+'_1_color.jpg'):
             print('file not exist!')
             break
+        # crop the image before store
+        # TODO: add image 00 in newest version of collected data
         img_1 = np.array(Image.open(img_base+'_1_color.jpg').crop(crop_box))
         img_01 = np.array(Image.open(img_base+'_01_color.jpg').crop(crop_box)).tobytes()
         img_11 = np.array(Image.open(img_base+'_11_color.jpg').crop(crop_box)).tobytes()
         img_12 = np.array(Image.open(img_base+'_12_color.jpg').crop(crop_box)).tobytes()
         img_13 = np.array(Image.open(img_base_2+'_13_color.jpg').crop(crop_box)).tobytes()
+        # save image height and width
         height, width = img_1.shape[0], img_1.shape[1]
         img_1 = img_1.tobytes()
+        # save depth array
         dp_file = np.load(img_base+'_1_depth.npy')
         depth_height, depth_width = dp_file.shape[0], dp_file.shape[1]
 
@@ -82,8 +92,6 @@ def tf_reader(tf_record_filename_queue):
     """
     read all TFRecord files in the src_folder
     """
-    # tf_record_filename_queue = tf.train.string_input_producer(
-    #     tf.train.match_filenames_once(os.path.join(src_folder, '*.tfrecord')))
 
     tf_record_reader = tf.TFRecordReader()
     _, tf_record_serialized = tf_record_reader.read(tf_record_filename_queue)
@@ -103,7 +111,7 @@ def tf_reader(tf_record_filename_queue):
 
     height = tf.cast(tf_record_features['height'], tf.int32)
     width = tf.cast(tf_record_features['width'], tf.int32)
-
+    # TODO: use img_00 for grasp in the newest raw data
     grasp = tf.decode_raw(tf_record_features['img_13'], tf.uint8)
     grasp_0 = tf.decode_raw(tf_record_features['img_11'], tf.uint8)
     grasp_1 = tf.decode_raw(tf_record_features['img_11'], tf.uint8)
@@ -113,16 +121,16 @@ def tf_reader(tf_record_filename_queue):
     grasp = tf.reshape(grasp, img_shape)
     grasp_0 = tf.reshape(grasp_0, img_shape)
     grasp_1 = tf.reshape(grasp_1, img_shape)
-
+    # use random crop 
     cropped_grasp = tf.random_crop(grasp, [472, 472, 3])
     cropped_grasp_0 = tf.random_crop(grasp_0, [472, 472, 3])
     cropped_grasp_1 = tf.random_crop(grasp_1, [472, 472, 3])
-
+    # concate the images
     images = tf.stack(
                       [tf.concat([cropped_grasp, cropped_grasp_0], 0)
                        ], axis=0
                       )
-    images = tf.cast(images, tf.float32) # [2,472*2,472,3]
+    images = tf.cast(images, tf.float32) # [1,472*2,472,3]
     # calculate input motions to the network
     motion0 = tf_record_features['move_1'] - tf_record_features['move_00']
     # append rotate angle to the motion list

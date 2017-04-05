@@ -94,6 +94,7 @@ def inference(images, motions, is_training):
                            padding='SAME', name='pool2') # [None,53,27,64]
     # fc1, processing motor command
     with tf.variable_scope('fc1'):
+        # our motion vector is 7 dim
         weights = tf.get_variable('weights', [7, 64], initializer=tf.truncated_normal_initializer(stddev = 0.01, dtype=tf.float32))
         biases = tf.get_variable('biases', [64], initializer=tf.constant_initializer(0.1))
         fc1 = tf.nn.relu(tf.matmul(motions, weights) + biases)
