@@ -8,13 +8,10 @@ https://github.com/tensorflow/models/blob/master/tutorials/image/cifar10/cifar10
 By Fang Wan
 """
 import tf_utils
-
 import time
 import os
-
 import googleGrasp as gg
-#import googleGrasp_input as ggIn
-#import tensorflow as tf
+import tensorflow as tf
 
 batch_size = 10
 num_epochs = 2
@@ -66,7 +63,7 @@ def run_training():
 
         checkpoint = tf.train.get_checkpoint_state(checkpoint_path)
         if checkpoint and checkpoint.model_checkpoint_path:
-            saver.restore(sess, checkpoint.model_checkpoint_paths)
+            saver.restore(sess, checkpoint)
 
         # Start input enqueue threads.
         # Queue runner is a thread that uses a session and calls an enqueue op over and over again.
