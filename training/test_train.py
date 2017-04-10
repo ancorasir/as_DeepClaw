@@ -7,7 +7,7 @@ https://github.com/tensorflow/models/blob/master/tutorials/image/cifar10/cifar10
 
 By Fang Wan
 """
-from tf_utils import *
+import tf_utils
 
 import time
 import os
@@ -18,7 +18,8 @@ import googleGrasp as gg
 
 batch_size = 10
 num_epochs = 2
-learning_rate = 0.01
+learning_rate = 0.005
+use_gpu_fraction = 0.8
 
 checkpoint_path = './checkpoint'
 summary_path = './summary'
@@ -31,15 +32,16 @@ def run_training():
         # list of all the tfrecord files under /grasping_dataset_058/
         TRAIN_FILES = tf.train.match_filenames_once(os.path.join(data_path, '*.tfrecord'))
         # Input images and labels.
-        images_batch, motions_batch, labels_batch = inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs)
+        images_batch, motions_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs)
         # Build a Graph that computes predictions from the inference model.
         is_training = tf.placeholder(tf.bool, name='is_training')
         logits = gg.inference(images_batch, motions_batch, is_training)
         # Add to the Graph the loss calculation.
         loss = gg.loss(logits,labels_batch)
-        # Add GPU config
+
+        # Add GPU config, now maximun using 80% GPU memory to train
         config = tf.ConfigProto()
-        config.gpu_options.per_process_gpu_memory_fraction = 0.8
+        config.gpu_options.per_process_gpu_memory_fraction = use_gpu_fraction
 
         # Add to the Graph operations that train the model.
         train_op = gg.training(loss, learning_rate)
@@ -90,9 +92,9 @@ def run_training():
         # When done, ask the threads to stop.
             coord.request_stop()
 
-    # Wait for threads to finish.
+        # Wait for threads to finish.
         coord.join(threads)
-        saver.save(sess, checkpoint_path+ '/Network', global_step=step)
+        saver.save(sess, checkpoint_path + '/Network', global_step=step)
         sess.close()
 
 def main(_):
