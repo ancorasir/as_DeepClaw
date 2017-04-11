@@ -34,54 +34,55 @@ def tf_writer(src_folder, dis_folder, crop_box):
     data = pd.read_csv(os.path.join(src_folder, 'data.csv'))
     
     for i in range(1, 40):
-        img_base = os.path.join(src_folder, 'cam1_I_'+str(i+1))
-        img_base_2 = os.path.join(src_folder, 'cam1_I_'+str(i))
-        if not os.path.isfile(img_base+'_1_color.jpg'):
+        img_base = os.path.join(src_folder, 'I_'+str(i+1))
+        if not os.path.isfile(img_base+'_1_color_camB.jpg'):
             print('file not exist!')
             break
         # crop the image before store
-        # TODO: add image 00 in newest version of collected data
-        img_1 = np.array(Image.open(img_base+'_1_color.jpg').crop(crop_box))
-        img_01 = np.array(Image.open(img_base+'_01_color.jpg').crop(crop_box)).tobytes()
-        img_11 = np.array(Image.open(img_base+'_11_color.jpg').crop(crop_box)).tobytes()
-        img_12 = np.array(Image.open(img_base+'_12_color.jpg').crop(crop_box)).tobytes()
-        img_13 = np.array(Image.open(img_base_2+'_13_color.jpg').crop(crop_box)).tobytes()
+        #img_1 = np.array(Image.open(img_base+'_1_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS))
+        img_01 = np.array(Image.open(img_base+'_01_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS))
+        img_00 = np.array(Image.open(img_base+'_00_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS)).tobytes()
+        #img_11 = np.array(Image.open(img_base+'_11_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS)).tobytes()
+        #img_12 = np.array(Image.open(img_base+'_12_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS)).tobytes()
+        #img_13 = np.array(Image.open(img_base+'_13_color_camB.jpg').crop(crop_box).resize((500, 500), Image.ANTIALIAS)).tobytes()
         # save image height and width
-        height, width = img_1.shape[0], img_1.shape[1]
-        img_1 = img_1.tobytes()
+        height, width = img_01.shape[0], img_01.shape[1]
+        img_01 = img_01.tobytes()
         # save depth array
-        dp_file = np.load(img_base+'_1_depth.npy')
+        dp_file = np.load(img_base+'_1_depth_camB.npy')
         depth_height, depth_width = dp_file.shape[0], dp_file.shape[1]
 
         example = tf.train.Example(features=tf.train.Features(
             feature={
             'name': _bytes_feature(img_base),
             'img_01': _bytes_feature(img_01),
-            'img_1' : _bytes_feature(img_1),
-            'img_11': _bytes_feature(img_11),
-            'img_12': _bytes_feature(img_12),
-            'img_13': _bytes_feature(img_13),
+            #'img_1' : _bytes_feature(img_1),
+            'img_00': _bytes_feature(img_00),
+            #'img_11': _bytes_feature(img_11),
+            #'img_12': _bytes_feature(img_12),
+            #'img_13': _bytes_feature(img_13),
             'height': _int64_feature(height),
             'width': _int64_feature(width),
             'move_00': _floats_feature(eval(data['move_00'][i][1:])),
             'move_1': _floats_feature(eval(data['move_1'][i][1:])),
             'rotate_angle': _floats_feature([data['rotate_angle'][i]]),
-            'gACT': _int64_feature(data['gACT'][i]),
-            'gMOD': _int64_feature(data['gMOD'][i]),
-            'gGTO': _int64_feature(data['gGTO'][i]),
-            'gSTA': _int64_feature(data['gSTA'][i]),
-            'gIMC': _int64_feature(data['gIMC'][i]),
-            'gFLT': _int64_feature(data['gFLT'][i]),
-            'gPRE': _int64_feature(data['gPRE'][i]),
-            'tcp_force': _floats_feature(eval(data['tcp_force'][i][1:])),
+            #'gACT': _int64_feature(data['gACT'][i]),
+            #'gMOD': _int64_feature(data['gMOD'][i]),
+            #'gGTO': _int64_feature(data['gGTO'][i]),
+            #'gSTA': _int64_feature(data['gSTA'][i]),
+            #'gIMC': _int64_feature(data['gIMC'][i]),
+            #'gFLT': _int64_feature(data['gFLT'][i]),
+            #'gPRE': _int64_feature(data['gPRE'][i]),
+            #'tcp_force': _floats_feature(eval(data['tcp_force'][i][1:])),
             'success': _floats_feature([data['success'][i]]),
             'depth_height': _int64_feature(depth_height),
             'depth_width': _int64_feature(depth_width),
             'depth_array_1': _bytes_feature(dp_file.tobytes()),
-            'depth_array_01': _bytes_feature(np.load(img_base+'_01_depth.npy').tobytes()),
-            'depth_array_11': _bytes_feature(np.load(img_base+'_11_depth.npy').tobytes()),
-            'depth_array_12': _bytes_feature(np.load(img_base+'_12_depth.npy').tobytes()),
-            'depth_array_13': _bytes_feature(np.load(img_base+'_13_depth.npy').tobytes())
+            'depth_array_01': _bytes_feature(np.load(img_base+'_01_depth_camB.npy').tobytes()),
+            'depth_array_00': _bytes_feature(np.load(img_base+'_00_depth_camB.npy').tobytes()),
+            #'depth_array_11': _bytes_feature(np.load(img_base+'_11_depth_camB.npy').tobytes()),
+            #'depth_array_12': _bytes_feature(np.load(img_base+'_12_depth_camB.npy').tobytes()),
+            #'depth_array_13': _bytes_feature(np.load(img_base+'_13_depth_camB.npy').tobytes())
             }))
         writer.write(example.SerializeToString())
 
@@ -102,8 +103,8 @@ def tf_reader(tf_record_filename_queue):
         'move_00': tf.FixedLenFeature([6], tf.float32),
         'move_1': tf.FixedLenFeature([6], tf.float32),
         'success': tf.FixedLenFeature([], tf.float32),
-        'img_11': tf.FixedLenFeature([], tf.string),
-        'img_13': tf.FixedLenFeature([], tf.string),
+        'img_01': tf.FixedLenFeature([], tf.string),
+        'img_00': tf.FixedLenFeature([], tf.string),
         'height': tf.FixedLenFeature([], tf.int64),
         'width': tf.FixedLenFeature([], tf.int64),
         'rotate_angle': tf.FixedLenFeature([1], tf.float32)
@@ -112,19 +113,19 @@ def tf_reader(tf_record_filename_queue):
     height = tf.cast(tf_record_features['height'], tf.int32)
     width = tf.cast(tf_record_features['width'], tf.int32)
     # TODO: use img_00 for grasp in the newest raw data
-    grasp = tf.decode_raw(tf_record_features['img_13'], tf.uint8)
-    grasp_0 = tf.decode_raw(tf_record_features['img_11'], tf.uint8)
-    grasp_1 = tf.decode_raw(tf_record_features['img_11'], tf.uint8)
+    grasp = tf.decode_raw(tf_record_features['img_00'], tf.uint8)
+    grasp_0 = tf.decode_raw(tf_record_features['img_01'], tf.uint8)
+    #grasp_1 = tf.decode_raw(tf_record_features['img_01'], tf.uint8)
 
     img_shape = tf.stack([height, width, 3])
 
     grasp = tf.reshape(grasp, img_shape)
     grasp_0 = tf.reshape(grasp_0, img_shape)
-    grasp_1 = tf.reshape(grasp_1, img_shape)
+    #grasp_1 = tf.reshape(grasp_1, img_shape)
     # use random crop 
     cropped_grasp = tf.random_crop(grasp, [472, 472, 3])
     cropped_grasp_0 = tf.random_crop(grasp_0, [472, 472, 3])
-    cropped_grasp_1 = tf.random_crop(grasp_1, [472, 472, 3])
+    #cropped_grasp_1 = tf.random_crop(grasp_1, [472, 472, 3])
     # concate the images
     images = tf.stack(
                       [tf.concat([cropped_grasp, cropped_grasp_0], 0)
@@ -134,6 +135,7 @@ def tf_reader(tf_record_filename_queue):
     # calculate input motions to the network
     motion0 = tf_record_features['move_1'] - tf_record_features['move_00']
     # append rotate angle to the motion list
+    motion0 = motion0[:2]
     motion0 = tf.concat([motion0, tf_record_features['rotate_angle']], 0)
     motions = tf.stack([motion0], axis=0)
     # duplicate labels to the same size as images input
@@ -181,7 +183,7 @@ def inputs(filenames, batch_size, num_epochs):
         # It then selects batch_size random elements from the queue to return.
         images_batch, motions_batch, labels_batch = tf.train.shuffle_batch([images, motions, labels], batch_size=batch_size, capacity=50 + 3 * batch_size, min_after_dequeue=50)
         actual_batch_size = images_batch.get_shape()[0].value * images_batch.get_shape()[1].value
-        return tf.reshape(images_batch, [actual_batch_size, 472*2, 472, 3]), tf.reshape(motions_batch, [actual_batch_size, 7]), tf.reshape(labels_batch, [actual_batch_size, 1])
+        return tf.reshape(images_batch, [actual_batch_size, 472*2, 472, 3]), tf.reshape(motions_batch, [actual_batch_size, 3]), tf.reshape(labels_batch, [actual_batch_size, 1])
 
 
 

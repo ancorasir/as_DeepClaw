@@ -11,7 +11,7 @@ class CEM(object):
     """docstring for CEM"""
     def __init__(self, model_path):
         self.image = tf.placeholder(tf.float32, [1, 472*2, 472, 3], name='image')
-        self.motions = tf.placeholder(tf.float32, [64, 7], name='motions')
+        self.motions = tf.placeholder(tf.float32, [64, 3], name='motions')
         self.is_training = tf.placeholder(tf.bool, name='is_training')
         self.inference = gg.inference(self.image, self.motions, self.is_training)
 
@@ -25,22 +25,27 @@ class CEM(object):
         if checkpoint:
             saver.restore(self.sess, checkpoint)
 
-    def run(self, image_00, image_13, M, N):
-        mean = [0, 0, 0, 0, 0, 0, 0]
-        cov = np.diagflat([1, 1, 1, 1, 1, 1, 1])
+    def run(self, image_00, image_01, M, N, position):
+        # position: (-0.65 ~ -0.32, -0.2~0.23)
+        mean = [0, 0, 0]
+        cov = np.diagflat([1, 1, 1])
 
-        images = np.concatenate((image_00, image_13), axis=0).reshape((1, 944, 472, 3))
+        images = np.concatenate((image_00, image_01), axis=0).reshape((1, 944, 472, 3))
         # google's work uses 3 iteration of optimization
-        for _ in range(3):
+        for iter in range(3):
             # sampling N grasp directions vt, shape = [N, 7]
             Xs = []
-            for _ in range(N):
+            # for _ in range(N):
+            i = 0
+            while i < N:
                 X = np.random.multivariate_normal(mean, cov, 1)
-                if True:
+                if -0.65 < X[0][0] < -0.32 and -0.2 < X[0][1] < 0.23 and -1.57 < X[0][2] < 1.57:
                 # make sure the sample grasp in within the workspace of the robotic gripper
                 #if (rotations<=180) and (gripper in workspace):
-                    X[0][2:-2] = 0
+                    X[0][0] -= position[0] # x vector
+                    X[0][1] -= position[1] # y vector
                     Xs.append(X[0])
+                    i += 1
             Xs = np.array(Xs, dtype=np.float32)
 
             # select the 6 best grasp directions by inferring to the network
@@ -60,18 +65,27 @@ class CEM(object):
 
             # Update parameters of distribution from the M best grasp directions
             mean = np.mean(best_Xs, axis=0)
+            mean[0] += position[0]
+            mean[1] += position[1]
             cov = np.cov(best_Xs, rowvar=0)
+            #print(mean, cov)
         # use the optimized parameter to infer the best grasp direction
         Xs = []
-        for _ in range(N):
+        i = 0
+        while i < N:
             X = np.random.multivariate_normal(mean, cov, 1)
-            if True:
-            #if (rotations<=180) and (gripper in workspace):
-                X[0][2:-1] = 0
+            if -0.65 < X[0][0] < -0.32 and -0.2 < X[0][1] < 0.23 and -1.57 < X[0][-1] < 1.57:
+            #if (rotations<=180) and (gripper in workspace)
+                X[0][0] -= position[0] # x vector
+                X[0][1] -= position[1] # y vector
                 Xs.append(X[0])
+                i += 1
         Xs = np.array(Xs)
         # selecting the best grasp directions
         performance = np.sum(Xs, axis=1)
 
         best_idx = np.argsort(performance)[-1:]
-        return Xs[best_idx], performance[best_idx]
+        position[0] += Xs[best_idx][0][0] 
+        position[1] += Xs[best_idx][0][1]
+        position[-1] = Xs[best_idx][0][2]
+        return position
