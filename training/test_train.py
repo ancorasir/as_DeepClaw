@@ -8,19 +8,22 @@ https://github.com/tensorflow/models/blob/master/tutorials/image/cifar10/cifar10
 By Fang Wan
 """
 import tf_utils
+
 import time
 import os
+
 import googleGrasp as gg
+#import googleGrasp_input as ggIn
 import tensorflow as tf
 
-batch_size = 10
-num_epochs = 2
+batch_size = 30
+num_epochs = 20
 learning_rate = 0.005
-use_gpu_fraction = 0.8
+use_gpu_fraction = 1
 
 checkpoint_path = './checkpoint'
 summary_path = './summary'
-data_path = '../tfrecord-3k'
+data_path = '/home/ancora-sirlab/xymeow/as_DeepClaw/training/tfrecords-5k'
 
 def run_training():
     """Train googleGrasp"""
@@ -61,8 +64,8 @@ def run_training():
         if not os.path.isdir(checkpoint_path):
             os.mkdir(checkpoint_path)
 
-        checkpoint = tf.train.get_checkpoint_state(checkpoint_path)
-        if checkpoint and checkpoint.model_checkpoint_path:
+        checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+        if checkpoint:
             saver.restore(sess, checkpoint)
 
         # Start input enqueue threads.
