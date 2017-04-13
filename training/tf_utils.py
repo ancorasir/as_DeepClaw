@@ -122,7 +122,7 @@ def tf_reader(tf_record_filename_queue):
     grasp = tf.reshape(grasp, img_shape)
     grasp_0 = tf.reshape(grasp_0, img_shape)
     #grasp_1 = tf.reshape(grasp_1, img_shape)
-    # use random crop 
+    # not use random crop 
     cropped_grasp = tf.random_crop(grasp, [472, 472, 3])
     cropped_grasp_0 = tf.random_crop(grasp_0, [472, 472, 3])
     #cropped_grasp_1 = tf.random_crop(grasp_1, [472, 472, 3])

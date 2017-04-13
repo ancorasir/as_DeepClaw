@@ -11,7 +11,7 @@ class Servoing(object):
     """docstring for CEM"""
     def __init__(self, model_path):
         self.image = tf.placeholder(tf.float32, [1, 472*2, 472, 3], name='image')
-        self.motions = tf.placeholder(tf.float32, [64, 3], name='motions')
+        self.motions = tf.placeholder(tf.float32, [1, 3], name='motions')
         self.is_training = tf.placeholder(tf.bool, name='is_training')
         self.inference = gg.inference(self.image, self.motions, self.is_training)
 
@@ -24,6 +24,9 @@ class Servoing(object):
         checkpoint = tf.train.latest_checkpoint(model_path)
         if checkpoint:
             saver.restore(self.sess, checkpoint)
+
+    def sigmoid(self, x):
+        return 1 / (1+np.exp(-1*x))
 
     def cem(self, images, M, N, position):
         # TODO: make cem method private
@@ -52,12 +55,14 @@ class Servoing(object):
                         self.image: images,
                         self.motions: X,
                         self.is_training: False
-                        }).T[0]
+                        }).T[0][0]
                     
                     performance.append(perf)
                     i += 1
             Xs = np.array(Xs, dtype=np.float32)
             performance = np.array(performance)
+            print(Xs)
+            print(performance)
 
             # select the 6 best grasp directions by inferring to the network
             # get images input from camera
@@ -69,7 +74,9 @@ class Servoing(object):
             # Sort X by objective function values (in ascending order)
             best_idx = np.argsort(performance)[-M:]
             best_Xs = np.array(Xs)[best_idx,:]
-
+            #print(performance)
+            #print(best_idx)
+            #print(best_Xs)
             # Update parameters of distribution from the M best grasp directions
             mean = np.mean(best_Xs, axis=0)
             mean[0] += position[0]
@@ -93,12 +100,13 @@ class Servoing(object):
                     self.image: images,
                     self.motions: X,
                     self.is_training: False
-                    }).T[0]
+                    }).T[0][0]
                 
                 performance.append(perf)
                 i += 1
         Xs = np.array(Xs, dtype=np.float32)
         performance = np.array(performance)
+        #print(performance)
         # performance = np.sum(Xs, axis=1)
 
         best_idx = np.argsort(performance)[-1:]
@@ -113,7 +121,7 @@ class Servoing(object):
         public method of servoing mechanism
         '''
         images = np.concatenate((image_00, image_01), axis=0).reshape((1, 472*2, 472, 3))
-        grasp = np.array([0, 0, 0], dtype=np.float32)
+        grasp = [np.array([0, 0, 0], dtype=np.float32)]
 
         performance_grasp = self.inference.eval(session=self.sess, feed_dict={
                 self.image: images,
@@ -123,8 +131,8 @@ class Servoing(object):
         #print('position', position)
         new_position, performance = self.cem(images, 6, 64, position)
         #print('new position', new_position)
-        print('pg=', performance_grasp, 'p0=', performance)
-        p = performance_grasp / performance[0]
+        print('pg=', self.sigmoid(performance_grasp), 'p0=', self.sigmoid(performance))
+        p = self.sigmoid(performance_grasp) / self.sigmoid(performance[0])
         flag = 0
         print('p=', p)
         if p > 0.9:

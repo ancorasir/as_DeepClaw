@@ -220,8 +220,11 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, servo
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
 		print '**********************************************'
-		img_00 = Image.open(data_path + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((200, 0, 1280, 1080)).resize((500, 500), Image.ANTIALIAS).crop((14, 14, 14+472, 14+472))
-		img_01 = Image.open(data_path + 'I_' + str(iteration) + '_01_color_camB.jpg').crop((200, 0, 1280, 1080)).resize((500, 500), Image.ANTIALIAS).crop((14, 14, 14+472, 14+472))
+		img_00 = Image.open(data_path + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((200, 0, 1280, 1080)).resize((472, 472), Image.ANTIALIAS)#.crop((14, 14, 14+472, 14+472))
+		img_01 = Image.open(data_path + 'I_' + str(iteration) + '_01_color_camB.jpg').crop((200, 0, 1280, 1080)).resize((472, 472), Image.ANTIALIAS)#.crop((14, 14, 14+472, 14+472))
+                img_00.save('img00.jpg')
+                img_01.save('img01.jpg')
+
 		position = conn.recv(1024)
 		position = eval(position[1:])
 		new_position = servoing.run(img_00, img_01, position)
