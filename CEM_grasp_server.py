@@ -4,7 +4,7 @@ import os, sys
 import csv
 import time
 from image_saver import ImageSaver
-from training.CEM import CEM
+from training.Servoing import Servoing
 from PIL import Image
 
 #num of batch
@@ -30,7 +30,7 @@ print '********************************************'
 
 #receive for every socket communication
 #blind grasp data collection
-def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, cem):
+def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, servoing):
 
 	'''
 	args:
@@ -224,7 +224,8 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, cem):
 		img_01 = Image.open(data_path + 'I_' + str(iteration) + '_01_color_camB.jpg').crop((200, 0, 1280, 1080)).resize((500, 500), Image.ANTIALIAS).crop((14, 14, 14+472, 14+472))
 		position = conn.recv(1024)
 		position = eval(position[1:])
-		new_position = cem.run(img_00, img_01, 6, 64, position)
+		new_position = servoing.run(img_00, img_01, position)
+		# the last param of 'new_position' indicates the next action
 		print(new_position)
 		conn.send(bytes(new_position))
 		
@@ -255,7 +256,7 @@ def connect_robot(ip_port, connect_num):
 	sock.listen(connect_num)
 	img_saver = ImageSaver()
 	# create CEM module
-	cem = CEM(model_path)
+	servoing = Servoing(model_path)
 	print 'connecting the robot'
 	print 'waiting for data'
 	print '******************************************'
@@ -278,7 +279,7 @@ def connect_robot(ip_port, connect_num):
 		for i in range(8):
 			conn,addr = sock.accept()
 			confirm = conn.recv(1024)
-			receive_from_robot(conn,iteration, confirm, fcsv, headers, img_saver, cem)
+			receive_from_robot(conn,iteration, confirm, fcsv, headers, img_saver, servoing)
 
 
 		
