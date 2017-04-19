@@ -16,9 +16,9 @@ import googleGrasp as gg
 #import googleGrasp_input as ggIn
 import tensorflow as tf
 
-batch_size = 30
-num_epochs = 20
-learning_rate = 0.005
+batch_size = 45
+num_epochs = 200
+learning_rate = 0.01
 use_gpu_fraction = 1
 
 checkpoint_path = './checkpoint'

@@ -87,5 +87,5 @@ class CEM(object):
         best_idx = np.argsort(performance)[-1:]
         position[0] += Xs[best_idx][0][0] 
         position[1] += Xs[best_idx][0][1]
-        position[-1] = Xs[best_idx][0][2]
+        position.append(Xs[best_idx][0][2])
         return position
