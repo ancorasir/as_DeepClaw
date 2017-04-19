@@ -22,13 +22,13 @@ from tensorflow.contrib.layers.python.layers import batch_norm
 # discussion https://github.com/tensorflow/tensorflow/issues/1122
 # mnist_cnn_bn https://gist.github.com/tomokishii/0ce3bdac1588b5cca9fa5fbdf6e1c412
 def BatchNorm(input, is_training=True, scope=None):
-    bn_train = batch_norm(input, decay=0.999, center=True, scale=True,
+    bn_train = batch_norm(input, decay=0.999, center=True, scale=False,
                           updates_collections=None,
                           is_training=True,
                           reuse=None, # for training
                           trainable=True,
                           scope=scope)
-    bn_inference = batch_norm(input, decay=0.999, center=True, scale=True,
+    bn_inference = batch_norm(input, decay=0.999, center=True, scale=False,
                               updates_collections=None,
                               is_training=False,
                               reuse=True, # for testing
@@ -43,7 +43,7 @@ def inference(images, motions, is_training):
 
     Args:
         images: from inputs(), [batch, in_height, in_width, in_channels], in_height=472*2, width=472, in_channel=3
-        motions: from inputs(), [batch, 5]
+        motions: from inputs(), [batch, 3]
         is_training: bool placeholder, if inference is for training or testing
 
     Returns:
@@ -94,7 +94,7 @@ def inference(images, motions, is_training):
                            padding='SAME', name='pool2') # [None,53,27,64]
     # fc1, processing motor command
     with tf.variable_scope('fc1'):
-        # our motion vector is 7 dim
+        # our motion vector is 3 dim
         weights = tf.get_variable('weights', [3, 64], initializer=tf.truncated_normal_initializer(stddev = 0.01, dtype=tf.float32))
         biases = tf.get_variable('biases', [64], initializer=tf.constant_initializer(0.1))
         fc1 = tf.nn.relu(tf.matmul(motions, weights) + biases)
@@ -183,7 +183,7 @@ def loss(logits, labels):
     loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels = labels, logits = logits), name='xentropy_mean')
     return loss
 
-def training(loss, learning_rate):
+def training(loss, learning_rate, global_step):
     """Sets up the training Ops.
 
     Creates an optimizer and applies the gradients to all trainable variables.
@@ -201,9 +201,9 @@ def training(loss, learning_rate):
     # Add a scalar summary for the snapshot loss.
     #tf.scalar_summary(loss.op.name, loss)
     # Create the gradient descent optimizer with the given learning rate.
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    optimizer = tf.train.AdamOptimizer(learning_rate)
     # Create a variable to track the global step.
-    global_step = tf.Variable(0, name='global_step', trainable=False)
+    #global_step = tf.Variable(0, name='global_step', trainable=False)
     # Use the optimizer to apply the gradients that minimize the loss
     # (and also increment the global step counter) as a single training step.
     train_op = optimizer.minimize(loss, global_step=global_step)
