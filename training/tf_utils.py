@@ -33,7 +33,7 @@ def tf_writer(src_folder, dis_folder, crop_box):
 
     data = pd.read_csv(os.path.join(src_folder, 'data.csv'))
     
-    for i in range(1, 40):
+    for i in range(0, 40):
         img_base = os.path.join(src_folder, 'I_'+str(i+1))
         if not os.path.isfile(img_base+'_1_color_camB.jpg'):
             print('file not exist!')
