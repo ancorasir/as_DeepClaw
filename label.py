@@ -82,7 +82,7 @@ if __name__ == '__main__':
     for dirs in os.listdir(base_dir):
         #print(dirs)
     #data_dir = '/home/ancora-sirlab/arcade_claw_test/2017-04-04 14:06:44/'
-        if dirs.split(' ')[0] == '2017-04-04':
+        if dirs.split(' ')[0] == '2017-04-25':
             data_dir = os.path.join(base_dir, dirs)
             label = get_lebel(data_dir)
     #print(data_dir)
