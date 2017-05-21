@@ -2,6 +2,8 @@
 
 as_DeepClaw is intended to be setup as a robotic grasping platform for deep learning based research and development. The robot is configured to perform similar tasks like the arcade game of claw crane. The goal of the game is for the player to control the crane in the horizontal x-y plane to determine an optimal coordinate to drop the claw in the vertical z axis. While descending, the claw will close while approaching the bottom of a transparent, enclosed cabinet filled with stuffed toys as rewards. If successful, one (or multiple if lucky) reward will be picked up by the closing claw, and deliver the reward to the lucky (or skilled) player by opening the claw above a drop hole. This is a very interesting game that’s been very popular in arcade game studios since the very beginning. In this project, a robotic system is setup in the same way to perform grasping tasks for deep learning training and validation. 
 
+Wan, F. & Song, C., 2017, as_DeepClay: An Arcade Claw Robot for Logical Learning with A Hybrid Neural Network. Github, https://github.com/ancorasir/as_DeepClaw, DOI: 10.5281/zenodo.581803
+
 # Task Decomposition
 * Start
     * Preliminary Preparation
