@@ -7,6 +7,7 @@ import glob
 import shutil
 
 rename_origin_folder = '/home/ancora-sirlab/wanfang/cropped_image/rename_origin_grasp_data'
+NUM_THETAS = 18
 
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
@@ -127,7 +128,66 @@ def select_success_grasp(src_folder, dis_folder):
             image_12.save(dis_folder + '/' + image_path[54:74] + '_' + image_path[75:])
     return
 
+def traverse_theta(src_folder, dis_folder):
+    """
+    change the datas under src_folder into TFRecord fomat
+
+    Args:
+        src_folder: source folder with image and csv datas
+        dis_folder: directory to save tfrecord file
+    """
+    if not os.path.isdir(dis_folder):
+        print('dis folder not exist! now creating a new one ...')
+        os.mkdir(dis_folder)
+
+    # list all images
+    all_images = sorted(glob.glob(src_folder+'/*_00_color*.jpg'), key=numericalSort)
+
+    for i in range(len(all_images)):
+        if i%1000==0:
+            print('Writing %s.tfrecord'%(i/1000))
+            if i!=0:
+                writer.close()
+            writer = tf.python_io.TFRecordWriter('croppedImage_traversed_tfrecord/croppedImage_%s'%(i/1000) + '.tfrecord')
+
+        # read cropped image in jpg
+        img_00 = np.array(Image.open(all_images[i]).resize((227, 227), Image.ANTIALIAS)).tobytes()
+
+        # traverse over indicator j
+        # label {0:fail, 1:success, 2:unknown, 3:conflict}
+        labels = []
+        theta_idx = (data['rotate_angle'][i]+3.14)//(2*2*3.14/NUM_THETAS) + 1
+        for j in range(NUM_THETAS+1):
+            if data['isDoll'][i]==0 and j==0:
+                labels.append(0)
+                continue
+            if data['isDoll'][i]==0 and j>0:
+                labels.append(3)
+                continue
+            if data['isDoll'][i]==1 and j==0:
+                labels.append(3)
+                continue
+            if theta_idx==j:
+                labels.append(data['success'][i])
+                continue
+            labels.append(2)
+        labels = np.array(labels)
+
+        # save image and graps data into tfrecord files
+        example = tf.train.Example(features=tf.train.Features(
+            feature={
+            'img_00': _bytes_feature(img_00),
+            'rotate_angle': _floats_feature([data['rotate_angle'][i]]),
+            'success': _floats_feature([data['success'][i]]),
+            'isDoll': _floats_feature([data['isDoll'][i]]),
+            'label': _floats_feature(labels)
+            }))
+        writer.write(example.SerializeToString())
+    writer.close()
+    return
+
 # save the data in src_folder into tfrecord in dis_folder
 #crop_image(rename_origin_folder, './croppedImage_jpg')
-tf_writer('./croppedImage_jpg', './croppedImage_tfrecord')
+#tf_writer('./croppedImage_jpg', './croppedImage_tfrecord')
+traverse_theta('./croppedImage_jpg', './croppedImage_traversed_tfrecord')
 #select_success_grasp('./croppedImage_jpg', './croppedImage_jpg_success')
