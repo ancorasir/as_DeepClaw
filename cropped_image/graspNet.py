@@ -6,7 +6,7 @@ import tensorflow as tf
 
 class model:
     def __init__(self):
-        self.NUM_CLASSES = 4
+        self.NUM_CLASSES = 2
     def initial_weights(self, weight_file='./bvlc_alexnet.npy'):
         if weight_file:
             # Load what you want the initialisation to be
@@ -31,43 +31,45 @@ class model:
             fc8W_init = tf.truncated_normal([1024,self.NUM_CLASSES], stddev=    0.01)
             fc8b_init = tf.constant(0.1, shape=[self.NUM_CLASSES])
         else:
-            conv1W_init = tf.truncated_normal([11, 11, 3, 96], stddev=    0.1)
+            conv1W_init = tf.truncated_normal([11, 11, 3, 96], stddev=    0.01)
             conv1b_init = tf.constant(0.1, shape=[96])
-            conv2W_init = tf.truncated_normal([5, 5, 48, 256], stddev=    0.1)
+            conv2W_init = tf.truncated_normal([5, 5, 48, 256], stddev=    0.01)
             conv2b_init = tf.constant(0.1, shape=[256])
-            conv3W_init = tf.truncated_normal([3, 3, 256, 384], stddev=    0.1)
+            conv3W_init = tf.truncated_normal([3, 3, 256, 384], stddev=    0.01)
             conv3b_init = tf.constant(0.1, shape=[384])
-            conv4W_init = tf.truncated_normal([3, 3, 192, 384], stddev=    0.1)
+            conv4W_init = tf.truncated_normal([3, 3, 192, 384], stddev=    0.01)
             conv4b_init = tf.constant(0.1, shape=[384])
-            conv5W_init = tf.truncated_normal([3, 3, 192, 256], stddev=    0.1)
+            conv5W_init = tf.truncated_normal([3, 3, 192, 256], stddev=    0.01)
             conv5b_init = tf.constant(0.1, shape=[256])
-            fc6W_init = tf.truncated_normal([9216, 4096], stddev=    0.1)
+            fc1W_init = tf.truncated_normal([1, 256], stddev=    0.01)
+            fc1b_init = tf.constant(0.1, shape=[256])
+            fc6W_init = tf.truncated_normal([9216, 4096], stddev=    0.01)
             fc6b_init = tf.constant(0.1, shape=[4096])
-            fc7W_init = tf.truncated_normal([4096, 1024], stddev=    0.1)
+            fc7W_init = tf.truncated_normal([4096, 1024], stddev=    0.01)
             fc7b_init = tf.constant(0.1, shape=[1024])
-            fc8W_init = tf.truncated_normal([1024,self.OUTPUT_SIZE], stddev=    0.1)
-            fc8b_init = tf.constant(0.1, shape=[self.OUTPUT_SIZE])
+            fc8W_init = tf.truncated_normal([1024,self.NUM_CLASSES], stddev=    0.01)
+            fc8b_init = tf.constant(0.1, shape=[self.NUM_CLASSES])
 
-        self.conv1W = tf.Variable(conv1W_init)
-        self.conv1b = tf.Variable(conv1b_init)
-        self.conv2W = tf.Variable(conv2W_init)
-        self.conv2b = tf.Variable(conv2b_init)
-        self.conv3W = tf.Variable(conv3W_init)
-        self.conv3b = tf.Variable(conv3b_init)
-        self.conv4W = tf.Variable(conv4W_init)
-        self.conv4b = tf.Variable(conv4b_init)
-        self.conv5W = tf.Variable(conv5W_init)
-        self.conv5b = tf.Variable(conv5b_init)
-        self.fc1W = tf.Variable(fc1W_init)
-        self.fc1b = tf.Variable(fc1b_init)
-        self.fc6W = tf.Variable(fc6W_init)
-        self.fc6b = tf.Variable(fc6b_init)
-        self.fc7W = tf.Variable(fc7W_init)
-        self.fc7b = tf.Variable(fc7b_init)
-        self.fc8b = tf.Variable(fc8b_init)
-        self.fc8W = tf.Variable(fc8W_init)
-        self.dropfc6 = 1
-        self.dropfc7 = 1
+        self.conv1W = tf.Variable(conv1W_init,trainable=False, name='conv1W')
+        self.conv1b = tf.Variable(conv1b_init,trainable=False, name='conv1b')
+        self.conv2W = tf.Variable(conv2W_init,trainable=False, name='conv2W')
+        self.conv2b = tf.Variable(conv2b_init,trainable=False, name='conv2b')
+        self.conv3W = tf.Variable(conv3W_init,trainable=False, name='conv3W')
+        self.conv3b = tf.Variable(conv3b_init,trainable=False, name='conv3b')
+        self.conv4W = tf.Variable(conv4W_init,trainable=False, name='conv4W')
+        self.conv4b = tf.Variable(conv4b_init,trainable=False, name='conv4b')
+        self.conv5W = tf.Variable(conv5W_init,trainable=False, name='conv5W')
+        self.conv5b = tf.Variable(conv5b_init,trainable=False, name='conv5b')
+        self.fc1W = tf.Variable(fc1W_init, name='fc1W')
+        self.fc1b = tf.Variable(fc1b_init, name='fc1b')
+        self.fc6W = tf.Variable(fc6W_init, name='fc6W')
+        self.fc6b = tf.Variable(fc6b_init, name='fc6b')
+        self.fc7W = tf.Variable(fc7W_init, name='fc7W')
+        self.fc7b = tf.Variable(fc7b_init, name='fc7b')
+        self.fc8W = tf.Variable(fc8W_init, name='fc8W')
+        self.fc8b = tf.Variable(fc8b_init, name='fc8b')
+        self.dropfc6 = 0.5
+        self.dropfc7 = 0.5
 
     def inference(self, image_batch, indicators_batch):
         #conv1
@@ -115,7 +117,7 @@ class model:
         #maxpool5
         #max_pool(3, 3, 2, 2, padding='VALID', name='pool5')
         k_h = 3; k_w = 3; s_h = 2; s_w = 2; padding = 'VALID'
-        maxpool5 = tf.nn.max_pool(conv5, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding)
+        maxpool5 = tf.nn.max_pool(conv5, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding) #[6,6,256]
 
         # Add indicator here to maxpool5
         fc1 = tf.nn.relu_layer(indicators_batch, self.fc1W, self.fc1b)
@@ -139,7 +141,12 @@ class model:
         #Debug stuff
         self.fc7 = fc7
         self.fc6 = fc6
+        self.conv1 = conv1
+        self.conv2 = conv2
+        self.conv3 = conv3
+        self.conv4 = conv4
         self.conv5 = conv5
+        self.fc1 = fc1
         #End Debug
         return logits
 

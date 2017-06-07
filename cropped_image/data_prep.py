@@ -9,6 +9,9 @@ import shutil
 rename_origin_folder = '/home/ancora-sirlab/wanfang/cropped_image/rename_origin_grasp_data'
 NUM_THETAS = 18
 
+# read grasp data prepared by label_graspCenter_isEmpty.py 
+data = pd.read_csv('./data_origin_grasp_data.csv')
+
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
     parts = numbers.split(value)
@@ -24,10 +27,10 @@ def _int64_feature(value):
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
-data = pd.read_csv('./data_origin_grasp_data.csv')
-
-# crop image_00 and image_1, save cropped  images in jpg 
 def crop_image(src_folder, dis_folder):
+    """
+    Crop image_00 and image_1, save cropped images in jpg format 
+    """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
@@ -65,30 +68,23 @@ def tf_writer(src_folder, dis_folder):
         os.mkdir(dis_folder)
 
     # list all images
-    all_images = sorted(glob.glob(src_folder+'/*.jpg'), key=numericalSort)
+    all_images = sorted(glob.glob(src_folder+'/*_00_color*.jpg'), key=numericalSort)
 
-    for i in range(len(all_images)/2):
+    for i in range(len(all_images)):
         if i%1000==0:
             print('Writing %s.tfrecord'%(i/1000)) 
             if i!=0:
                 writer.close()
-            writer = tf.python_io.TFRecordWriter('croppedImage_tfrecord/croppedImage_%s'%(i/1000) + '.tfrecord')
+            writer = tf.python_io.TFRecordWriter(dis_folder+'/croppedImage_%s'%(i/1000) + '.tfrecord')
       
         # read cropped image in jpg
-        img_00 = np.array(Image.open(all_images[2*i]))
-        img_1 = np.array(Image.open(all_images[2*i+1])).tobytes()
-
-        height, width = img_00.shape[0], img_00.shape[1]
-        img_00 = img_00.tobytes()
+        img_00 = np.array(Image.open(all_images[i]).resize((227, 227), Image.ANTIALIAS)).tobytes()
 
         # save image and graps data into tfrecord files
         example = tf.train.Example(features=tf.train.Features(
             feature={
-            'name': _bytes_feature(all_images[2*i][67:90]),
-            'img_1': _bytes_feature(img_1),
+            'name': _bytes_feature(all_images[i][67:90]),
             'img_00': _bytes_feature(img_00),
-            'height': _int64_feature(height),
-            'width': _int64_feature(width),
             'move_1': _floats_feature(eval(data['move_1'][i][1:])),
             'rotate_angle': _floats_feature([data['rotate_angle'][i]]),
             'success': _floats_feature([data['success'][i]]),
@@ -99,8 +95,10 @@ def tf_writer(src_folder, dis_folder):
     return
 
 
-# select success grasp and save cropped image 00, 1 and 12 in dis_folder: 
 def select_success_grasp(src_folder, dis_folder):
+    """
+    Select success grasp and save cropped image 00, 1 and 12 in dis_folder: 
+    """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
@@ -128,13 +126,14 @@ def select_success_grasp(src_folder, dis_folder):
             image_12.save(dis_folder + '/' + image_path[54:74] + '_' + image_path[75:])
     return
 
-def traverse_theta(src_folder, dis_folder):
+def tf_writer_1(src_folder, dis_folder):
     """
-    change the datas under src_folder into TFRecord fomat
+    For each image_00, traverse all 19 indicators and generate 19 labels.
+    Save image_00, and labels to tfrecord
+    
+    Indicator: {0:no object in the grasp area, 1:[0,20) degrees with object in the grasp area, 2:[20,40)}
+    Label:     {0:fail, 1:success, 2:unknown, 3:conflict}
 
-    Args:
-        src_folder: source folder with image and csv datas
-        dis_folder: directory to save tfrecord file
     """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
@@ -154,9 +153,8 @@ def traverse_theta(src_folder, dis_folder):
         img_00 = np.array(Image.open(all_images[i]).resize((227, 227), Image.ANTIALIAS)).tobytes()
 
         # traverse over indicator j
-        # label {0:fail, 1:success, 2:unknown, 3:conflict}
         labels = []
-        theta_idx = (data['rotate_angle'][i]+3.14)//(2*2*3.14/NUM_THETAS) + 1
+        theta_idx = (data['rotate_angle'][i]+3.14)//(2*3.14/NUM_THETAS) + 1
         for j in range(NUM_THETAS+1):
             if data['isDoll'][i]==0 and j==0:
                 labels.append(0)
@@ -186,8 +184,19 @@ def traverse_theta(src_folder, dis_folder):
     writer.close()
     return
 
-# save the data in src_folder into tfrecord in dis_folder
+def image_mean(src_folder):
+    all_images = sorted(glob.glob(src_folder+'/*_00_color*.jpg'), key=numericalSort)
+    s = np.array([0.0,0.0,0.0])
+    for i in range(len(all_images)):
+        # read cropped image in jpg
+        img_00 = np.array(Image.open(all_images[i]))
+        s += [np.mean(img_00[:,:,j]) for j in range(3)]
+    m = s/len(all_images)
+    print(m)
+    # m = [ 164.29138336  164.68029373  163.59514228]
+
 #crop_image(rename_origin_folder, './croppedImage_jpg')
-#tf_writer('./croppedImage_jpg', './croppedImage_tfrecord')
-traverse_theta('./croppedImage_jpg', './croppedImage_traversed_tfrecord')
+tf_writer('./croppedImage_jpg', './croppedImage_tfrecord')
+#tf_writer_1('./croppedImage_jpg', './croppedImage_traversed_tfrecord')
 #select_success_grasp('./croppedImage_jpg', './croppedImage_jpg_success')
+#image_mean('./croppedImage_jpg')

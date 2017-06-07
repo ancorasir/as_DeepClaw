@@ -16,18 +16,18 @@ from graspNet import model as grasp_net
 import tensorflow as tf
 
 # 40, 10min/epoch;
-batch_size = 50
-num_epochs = 10
+batch_size = 100
+num_epochs = 20
 #starter_learning_rate = 0.05
 use_gpu_fraction = 1
 
-max_learning_rate = 0.01
-min_learning_rate = 0.0005
+max_learning_rate = 0.001
+min_learning_rate = 0.0001
 decay_speed = 1000
 
 checkpoint_path = './checkpoint'
 summary_path = './summary'
-data_path = '/home/ancora-sirlab/wanfang/cropped_image/croppedImage_traversed_tfrecord'
+data_path = '/home/ancora-sirlab/wanfang/cropped_image/croppedImage_tfrecord'
 
 def run_training():
     """Train googleGrasp"""
@@ -38,11 +38,13 @@ def run_training():
         # list of all the tfrecord files under /grasping_dataset_058/
         TRAIN_FILES = tf.train.match_filenames_once(os.path.join(data_path, '*.tfrecord'))
 	# Input images and labels.
-        images_batch, indicators_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs)
+        #images_batch, thetas_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs, is_train=1)
+        images_batch, thetas_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs, is_train=1)
+
         # Build a Graph that computes predictions from the inference model.
         model = grasp_net()
         model.initial_weights(weight_file='./bvlc_alexnet.npy')
-        logits = model.inference(images_batch, indicators_batch)
+        logits = model.inference(images_batch, thetas_batch)
         y = tf.nn.softmax(logits)
 	# Add to the Graph the loss calculation.
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels = labels_batch, logits = logits), name='xentropy_mean')
@@ -79,7 +81,7 @@ def run_training():
         summary_writer = tf.summary.FileWriter(summary_path, graph=tf.get_default_graph())
 
         # Add saver
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=10)
         if not os.path.isdir(checkpoint_path):
             os.mkdir(checkpoint_path)
         checkpoint = tf.train.latest_checkpoint(checkpoint_path)
@@ -100,7 +102,7 @@ def run_training():
                 duration = time.time() - start_time
                 if step % 10 == 0:
                     print('Step %d: loss = %.2f accuracy = %.2f (%.3f sec)' % (step, loss_value, accuracy_value, duration))
-                if global_step_value % 6000 == 0:
+                if global_step_value % 300 == 0:
 		    saver.save(sess, checkpoint_path + '/Network', global_step = global_step)
 		step += 1
         except tf.errors.OutOfRangeError:
