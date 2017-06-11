@@ -21,7 +21,8 @@ from tensorflow.contrib.layers.python.layers import batch_norm
 # http://r2rt.com/implementing-batch-normalization-in-tensorflow.html
 # discussion https://github.com/tensorflow/tensorflow/issues/1122
 # mnist_cnn_bn https://gist.github.com/tomokishii/0ce3bdac1588b5cca9fa5fbdf6e1c412
-# use this one: http://ruishu.io/2016/12/27/batchnorm/
+# 10/05/2017 use this one: http://ruishu.io/2016/12/27/batchnorm/
+# 11/05/2017 https://docs.google.com/presentation/d/e/2PACX-1vRouwj_3cYsmLrNNI3Uq5gv5-hYp_QFdeoan2GlxKgIZRSejozruAbVV0IMXBoPsINB7Jw92vJo2EAM/pub?slide=id.g187d73109b_1_1366
 def BatchNorm(input, is_training=True, scope=None):
     """Note: When is_training is True the moving_mean and moving_variance need to be updated, by default the update_ops are placed in tf.GraphKeys.UPDATE_OPS so they need to be added as a dependency to the train_op:
 
