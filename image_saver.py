@@ -125,10 +125,11 @@ class ImageSaver(object):
             (r, g, b, d) = cv2.split(color)
             color = cv2.merge([b, g, r])
 
+        pre = prefix.split('/') # ['.', '2017-07-04 10:26:38', 'I_1_00']
         #save color img
-        cv2.imwrite(prefix + '_color_camB.jpg', color)
+        cv2.imwrite('./' + pre[1] + '/ImgColorCamB/' + pre[2] + '_color_camB.jpg', color)
         #save depth img
-        np.save(prefix + '_depth_camB.npy', cv2.flip(depth.asarray(), 1))
+        np.save('./' + pre[1] + '/ImgDepthCamB/' + pre[2] + '_depth_camB.npy', cv2.flip(depth.asarray(), 1))
 
         #release listener for next shot
         self.listener0.release(frames0)
@@ -147,8 +148,8 @@ class ImageSaver(object):
             (r, g, b, d) = cv2.split(color)
             color = cv2.merge([b, g, r])
         # save image in qhd size
-        cv2.imwrite(prefix + '_color_camA.jpg', color)
-        np.save(prefix + '_depth_camA.npy', cv2.flip(depth.asarray(), 1))
+        cv2.imwrite('./' + pre[1] + '/ImgColorCamA/' + pre[2] + '_color_camA.jpg', color)
+        np.save('./' + pre[1] + '/ImgDepthCamA/' + pre[2] + '_depth_camA.npy', cv2.flip(depth.asarray(), 1))
         self.listener1.release(frames1)
 
         print('save A')
