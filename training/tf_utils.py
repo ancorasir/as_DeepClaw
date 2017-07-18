@@ -34,6 +34,7 @@ def tf_reader(tf_record_filename_queue, size):
         })
     images = []
     for i in range(size):
+    #for i in tf.unstack(tf_record_features['img_00']):
         img = tf_record_features['img_00'][i]
         grasp = tf.decode_raw(img, tf.uint8)
         image = tf.reshape(grasp, [227, 227,3])
@@ -46,7 +47,7 @@ def tf_reader(tf_record_filename_queue, size):
 
 def tf_reader_1(tf_record_filename_queue, size):
     """
-    read all TFRecord files in the src_folder
+    read all TFRecord files in the src_folder for traversed data
     """
     tf_record_reader = tf.TFRecordReader()
     _, tf_record_serialized = tf_record_reader.read_up_to(tf_record_filename_queue, size)
@@ -87,7 +88,7 @@ def inputs(filenames, batch_size, num_epochs, is_train=1):
         T_index = tf.floordiv(T, 2*3.14/NUM_THETAS)+1
 
         # generate new data by traverse all thetas while predict on test set
-        if 1:
+        if 0:
             I_traversed = tf.tile(I, [NUM_THETAS, 1, 1, 1])
             indicators = tf.reshape(
                 tf.tile(
@@ -97,5 +98,5 @@ def inputs(filenames, batch_size, num_epochs, is_train=1):
             L_traversed = tf.reshape(tf.tile(L,[NUM_THETAS, 1]),[-1])
             return I_traversed, tf.to_float(indicators)*1000, tf.one_hot(tf.to_int32(L_traversed), NUM_CLASSES)
 
-        return I, T_index*1000, tf.one_hot(tf.to_int32(tf.reshape(L,[-1])), NUM_CLASSES)
+        return I, T_index*100, tf.one_hot(tf.to_int32(tf.reshape(L,[-1])), NUM_CLASSES)
 

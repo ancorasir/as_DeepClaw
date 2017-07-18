@@ -23,7 +23,7 @@ connect_num = 100
 #data_path = './new_data/'
 data_path = './' + time.strftime('%Y%m%d-%H%M%S-ImgData',time.localtime(time.time()))[2:] + '/'
 model_path = './checkpoint_100index'
-#os.mkdir(data_path)
+os.mkdir(data_path)
 os.mkdir(data_path + 'ImgColorCamA/')
 os.mkdir(data_path + 'ImgDepthCamA/')
 os.mkdir(data_path + 'ImgColorCamB/')
@@ -225,7 +225,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, CNN):
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
 		print '**********************************************'
-		img_00 = Image.open(data_path + 'ImgColorCamB/' + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((680, 430, 1180, 890))
+		img_00 = Image.open(data_path + 'ImgColorCamB/' + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((700, 465, 1165, 875))
 
 		position = conn.recv(1024)
 		position = eval(position[1:])

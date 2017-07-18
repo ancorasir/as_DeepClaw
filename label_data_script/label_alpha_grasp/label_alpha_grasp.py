@@ -84,7 +84,7 @@ def get_lebel(data_dir):
     return label
 
 if __name__ == '__main__':
-    base_dir = '/home/ancora-sirlab/arcade_claw_test/origin_grasp_data'
+    base_dir = '/home/ancora-sirlab/as_DeepClaw_data/alpha_blind_data'
 
     for dirs in os.listdir(base_dir):
         if dirs.split(' ')[0].split('-')[0] == '2017':

@@ -10,7 +10,7 @@ rename_origin_folder = '/home/ancora-sirlab/wanfang/cropped_image/rename_origin_
 NUM_THETAS = 18
 
 # read grasp data prepared by label_graspCenter_isEmpty.py 
-data = pd.read_csv('./data_origin_grasp_data.csv')
+#data = pd.read_csv('./data_beta_grasp_data.csv')
 
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
@@ -35,6 +35,8 @@ def crop_image(src_folder, dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
 
+    data = pd.read_csv('./data_origin_grasp_data.csv')
+
     # list all images
     all_images = sorted(glob.glob(src_folder+'/*.jpg'), key=numericalSort)
 
@@ -55,6 +57,49 @@ def crop_image(src_folder, dis_folder):
         #image_1 = Image.open(all_images[2*i+1]).crop(crop_box)
         #image_1.save(dis_folder + all_images[2*i+1][66:])
 
+def crop_image_beta(src_folder, dis_folder):
+    """
+    Crop image_00, save cropped images in jpg format 
+    """
+    if not os.path.isdir(dis_folder):
+        print('dis folder not exist! now creating a new one ...')
+        os.mkdir(dis_folder)
+
+    all_images = []
+    all_data_ = []
+    for dirs in os.listdir(src_folder):
+        if dirs.split('-')[0] == 'backuped':
+            data_dir = os.path.join(src_folder, dirs)
+            # the last record is not used since it is not properly labeled
+            data = pd.read_csv(glob.glob(data_dir+'/*labeled.csv')[0]).iloc[:-1,:]
+
+            # read images which have valid success/fail labels in the csv files
+            all_images += sorted(glob.glob(data_dir+'/*-ImgColorCamB/*_00_color*.jpg'), key=numericalSort)[:data.shape[0]]
+            all_data_.append( data )
+    all_data = pd.concat(all_data_, ignore_index=True)
+    all_data.to_csv('./data_beta_grasp_data.csv')
+
+    M_robotToImage = np.load('M_robotToImage.npy')
+    for i in range(len(all_images)):
+        # determine the location of crop box
+        coord = eval(all_data['move_1'][i][1:])
+        angle = all_data['rotate_angle'][i]
+        x = coord[0]
+        y = coord[1]
+        
+        temp = np.matmul(M_robotToImage, np.array([[x,y,1]]).transpose())
+        lftpix, uppix = (temp[:2,0]/temp[2,0]).astype(int)
+        
+        shft = 125
+        crop_box = (lftpix-shft,uppix-shft,lftpix+shft,uppix+shft)
+
+        # save cropped image in jpg
+        image_00 = Image.open(all_images[i]).crop(crop_box)
+        if all_images[i].split('/')[-1][0] == 'I':
+            image_00.save(dis_folder + '/' + all_images[i].split('/')[-2][:14] + all_images[i].split('/')[-1])
+        else:
+            image_00.save(dis_folder + '/' + all_images[i].split('/')[-1])
+
 def tf_writer(src_folder, dis_folder):
     """
     change the datas under src_folder into TFRecord fomat
@@ -67,6 +112,8 @@ def tf_writer(src_folder, dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
 
+    data = pd.read_csv('./data_beta_grasp_data.csv')
+
     # list all images
     all_images = sorted(glob.glob(src_folder+'/*_00_color*.jpg'), key=numericalSort)
 
@@ -75,7 +122,7 @@ def tf_writer(src_folder, dis_folder):
             print('Writing %s.tfrecord'%(i/1000)) 
             if i!=0:
                 writer.close()
-            writer = tf.python_io.TFRecordWriter(dis_folder+'/croppedImage_%s'%(i/1000) + '.tfrecord')
+            writer = tf.python_io.TFRecordWriter(dis_folder+'/croppedImage_beta_%s'%(i/1000) + '.tfrecord')
       
         # read cropped image in jpg
         img_00 = np.array(Image.open(all_images[i]).resize((227, 227), Image.ANTIALIAS)).tobytes()
@@ -83,12 +130,12 @@ def tf_writer(src_folder, dis_folder):
         # save image and graps data into tfrecord files
         example = tf.train.Example(features=tf.train.Features(
             feature={
-            'name': _bytes_feature(all_images[i][67:90]),
+            'name': _bytes_feature(all_images[i].split('/')[-1][:-4]),
             'img_00': _bytes_feature(img_00),
             'move_1': _floats_feature(eval(data['move_1'][i][1:])),
             'rotate_angle': _floats_feature([data['rotate_angle'][i]]),
             'success': _floats_feature([data['success'][i]]),
-            'isDoll': _floats_feature([data['isDoll'][i]])
+            #'isDoll': _floats_feature([data['isDoll'][i]])
             }))
         writer.write(example.SerializeToString())
     writer.close()
@@ -196,7 +243,10 @@ def image_mean(src_folder):
     # m = [ 164.29138336  164.68029373  163.59514228]
 
 #crop_image(rename_origin_folder, './croppedImage_jpg_new')
-tf_writer('./croppedImage_jpg_new', './croppedImage_tfrecord_new')
+#tf_writer('./croppedImage_jpg_new', './croppedImage_tfrecord_new')
 #tf_writer_1('./croppedImage_jpg', './croppedImage_traversed_tfrecord')
 #select_success_grasp('./croppedImage_jpg', './croppedImage_jpg_success')
 #image_mean('./croppedImage_jpg')
+
+#crop_image_beta('/home/ancora-sirlab/as_DeepClaw_data/beta_grasp_data/backuped-and-labeled-on-170718', './croppedImage_jpg_beta')
+tf_writer('./croppedImage_jpg_beta', './croppedImage_tfrecord')

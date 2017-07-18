@@ -17,7 +17,7 @@ import tensorflow as tf
 
 # 40, 10min/epoch;
 batch_size = 100
-num_epochs = 10
+num_epochs = 15
 #starter_learning_rate = 0.05
 use_gpu_fraction = 1
 
@@ -27,7 +27,7 @@ decay_speed = 1000
 
 checkpoint_path = './checkpoint'
 summary_path = './summary'
-data_path = '/home/ancora-sirlab/wanfang/cropped_image/croppedImage_tfrecord_new'
+data_path = '/home/ancora-sirlab/wanfang/training_cropped_image/croppedImage_tfrecord'
 
 def run_training():
     """Train googleGrasp"""
@@ -36,7 +36,7 @@ def run_training():
 	global_step = tf.Variable(0, name='global_step', trainable=False)
 
         # list of all the tfrecord files under /grasping_dataset_058/
-        TRAIN_FILES = tf.train.match_filenames_once(os.path.join(data_path, '*.tfrecord'))
+        TRAIN_FILES = tf.train.match_filenames_once(os.path.join(data_path, '*beta*.tfrecord'))
 	# Input images and labels.
         #images_batch, thetas_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs, is_train=1)
         images_batch, thetas_batch, labels_batch = tf_utils.inputs(TRAIN_FILES, batch_size=batch_size, num_epochs=num_epochs, is_train=1)

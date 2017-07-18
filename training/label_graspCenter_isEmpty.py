@@ -1,10 +1,9 @@
 import os, re
+d_csv(csvfile)
 import numpy as np
 import pandas as pd
 import glob
 from PIL import Image
-
-rename_origin_folder = '/home/ancora-sirlab/wanfang/cropped_image/rename_origin_grasp_data_new'
 
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
@@ -12,16 +11,11 @@ def numericalSort(value):
     parts[1::2] = map(int, parts[1::2])
     return parts
 
-data_ = []
-for csvfile in sorted(glob.glob(rename_origin_folder+'/*.csv')):
-    data_.append( pd.read_csv(csvfile) )
-
-data = pd.concat(data_, ignore_index=True)
+data = pd.read_csv('./data_beta_grasp_data.csv')
 total_grasp_num = len(data['success'])
-#data['isDoll'] = pd.Series(np.empty((total_grasp_num)) * np.nan)
 data['isDoll'] = pd.Series(np.zeros(total_grasp_num))
 
-all_image_00 = sorted(glob.glob('./croppedImage_jpg_new'+'/*.jpg'), key=numericalSort)
+all_image_00 = sorted(glob.glob('./croppedImage_jpg_beta'+'/*.jpg'), key=numericalSort)
 
 grasp_box = [90, 90, 270, 270]
 threshhold = 41
