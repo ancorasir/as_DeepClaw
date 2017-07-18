@@ -27,7 +27,12 @@ from PIL import Image
 use_gpu_fraction = 0.8
 NUM_THETAS = 18
 SCALE_THETA = 100
+
+# patch size in pixels
+PATCH_PIXELS = 250
 INDICATORS = np.arange(1,NUM_THETAS+1).reshape([NUM_THETAS,1]) * SCALE_THETA
+
+M_imageToRobot = np.load('M_imageToRobot.npy')
 
 class Predictor:
     def __init__(self, checkpoint_path='./checkpoint'):
@@ -63,7 +68,7 @@ class Predictor:
             best_probability.append(y_value[best_idx,1])
         return np.array(best_theta)/SCALE_THETA, np.array(best_probability)
 
-    def eval(self, image, position, num_patches_h = 10, patch_pixels = 360):
+    def eval(self, image, position, num_patches_h = 10, patch_pixels = PATCH_PIXELS):
         # input images is full image, for each image, traverse locations to generate grasp patches and thetas
         patches, boxes = self.generate_patches(image, num_patches_h, patch_pixels)
         candidates_theta, candidates_probability= self.eval_theta(patches) #[number of patches]
@@ -71,15 +76,26 @@ class Predictor:
         x_pixel =  sum(boxes[best_idx][0::2])/2
         y_pixel = sum(boxes[best_idx][1::2])/2
         theta = candidates_theta[best_idx] # theta here is the theta index ranging from 1 to 18
+
         # mapping pixel position to robot position, transform to pixel position in the original uncropped images first by plus 100
-        x = ( 810 - 50 - (y_pixel + 150) )*0.46/480.0 - 0.73
-        y = ( 1067 - 50 - (x_pixel + 300) )*0.6/615.0 - 0.25
-        position[0] = x
-        position[1] = y
-        position.append((-3.14 + (theta-0.5)*(3.14/9)))
+        #x = ( 810 - 50 - (y_pixel + 150) )*0.46/480.0 - 0.73
+        #y = ( 1067 - 50 - (x_pixel + 300) )*0.6/615.0 - 0.25
+        new = np.matmul(M_imageToRobot, np.float32([[x_pixel+700, y_pixel+465, 1]]).transpose()) #[3,1]
+        new_xy = new[:2,0]/new[2,0]
+        position[0] = new_xy[0]
+        position[1] = new_xy[1]
+       
+        # TODO, add the angle change between Xiatian's setting and our new setting
+        # Xiatian's initial grasp plate is parallel to the bin with thumb near robot (--), clockwise rotation is positive 0 ~ pi, anti-clockwise is negative
+        # our new initial grasp plate is parallel to the bin (Rz=zero when get_actual_joint_positions)
+        theta_calibration = 0
+        rotation = (-3.1415 + (theta-0.5)*(3.1415/9)) + theta_calibration
+        if rotation<-3.1415:
+            rotation += 2*3.1415
+        position.append(rotation)
         return position  #[x, y, theta]
 
-    def generate_patches(self, image, num_patches_w = 10, patch_pixels = 360):
+    def generate_patches(self, image, num_patches_w = 10, patch_pixels = PATCH_PIXELS):
         I_h, I_w, I_c = np.array(image).shape # width, height, channels
 
         patches = []
