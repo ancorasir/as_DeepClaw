@@ -22,7 +22,7 @@ connect_num = 100
 #data folder
 #data_path = './new_data/'
 data_path = './' + time.strftime('%Y%m%d-%H%M%S-ImgData',time.localtime(time.time()))[2:] + '/'
-model_path = '/home/ancora-sirlab/wanfang/training_cropped_rotated_image/checkpoint'
+model_path = '/home/ancora-sirlab/wanfang/training_cropped_image/checkpoint_100index_alpha'
 os.mkdir(data_path)
 
 os.mkdir(data_path + data_path.split('/')[1][:14] + 'ImgColorCamA/')
@@ -231,7 +231,7 @@ def receive_from_robot(conn, iteration, confirm, fcsv, headers, img_saver, CNN):
 		conn.send(bytes(confirm))
 		print 'complete ' + confirm
 		print '**********************************************'
-		img_00 = Image.open(data_path + data_path.split('/')[1][:14] + 'ImgColorCamB/' + data_path.split('/')[1][:14] + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((700-65, 465-65, 1165+65, 875+65))
+		img_00 = Image.open(data_path + data_path.split('/')[1][:14] + 'ImgColorCamB/' + data_path.split('/')[1][:14] + 'I_' + str(iteration) + '_00_color_camB.jpg').crop((700, 465, 1165, 875))
 
 		position = conn.recv(1024)
 		position = eval(position[1:])

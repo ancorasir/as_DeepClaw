@@ -29,7 +29,7 @@ NUM_THETAS = 18
 SCALE_THETA = 100
 
 # patch size in pixels
-PATCH_PIXELS = 360 # cover 250 for all rotation angles
+PATCH_PIXELS = 250
 INDICATORS = np.arange(1,NUM_THETAS+1).reshape([NUM_THETAS,1]) * SCALE_THETA
 
 M_imageToRobot = np.load('M_imageToRobot.npy')
@@ -40,11 +40,11 @@ class Predictor:
 
         # initialize prediction network for each patch
         self.images_batch = tf.placeholder(tf.float32, shape=[NUM_THETAS, 227, 227, 3])
-        #self.indicators_batch = tf.placeholder(tf.float32, shape=[NUM_THETAS, 1])
+        self.indicators_batch = tf.placeholder(tf.float32, shape=[NUM_THETAS, 1])
 
         self.M = model()
         self.M.initial_weights()
-        logits = self.M.inference(self.images_batch)
+        logits = self.M.inference(self.images_batch, self.indicators_batch)
         self.y = tf.nn.softmax(logits)
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
         saver = tf.train.Saver(variables)
@@ -61,8 +61,8 @@ class Predictor:
         best_theta = []
         best_probability = []
         for i in range(NUM_PATCHES):
-            patch_thetas = patches[i]
-            y_value = self.sess.run(self.y, feed_dict={self.images_batch: patch_thetas})
+            patch_thetas = np.tile( patches[i].reshape([1, 227, 227, 3]), [NUM_THETAS,1,1,1])
+            y_value = self.sess.run(self.y, feed_dict={self.images_batch: patch_thetas, self.indicators_batch: INDICATORS})
             best_idx = np.argmax(y_value[:,1])
             best_theta.append(INDICATORS[best_idx][0])
             best_probability.append(y_value[best_idx,1])
@@ -78,7 +78,9 @@ class Predictor:
         theta = candidates_theta[best_idx] # theta here is the theta index ranging from 1 to 18
 
         # mapping pixel position to robot position, transform to pixel position in the original uncropped images first by plus 100
-        new = np.matmul(M_imageToRobot, np.float32([[x_pixel+700-65, y_pixel+465-65, 1]]).transpose()) #[3,1]
+        #x = ( 810 - 50 - (y_pixel + 150) )*0.46/480.0 - 0.73
+        #y = ( 1067 - 50 - (x_pixel + 300) )*0.6/615.0 - 0.25
+        new = np.matmul(M_imageToRobot, np.float32([[x_pixel+700, y_pixel+465, 1]]).transpose()) #[3,1]
         new_xy = new[:2,0]/new[2,0]
         position[0] = new_xy[0]
         position[1] = new_xy[1]
@@ -100,16 +102,12 @@ class Predictor:
         boxes = []
         for i in range(0, I_w-patch_pixels, (I_w-patch_pixels)/num_patches_w):
             for j in range(0, I_h-patch_pixels, (I_w-patch_pixels)/num_patches_w):
-                patch_thetas = []
                 box = (i, j, i+patch_pixels, j+patch_pixels)
+                patch = image
+                patch = patch.crop(box).resize((227, 227), Image.ANTIALIAS)
+                patches.append(np.array(patch))
                 boxes.append(box)
-                for theta in range(-170,180,20):
-                    patch = image
-                    patch = patch.crop(box).rotate(theta).crop((180-125, 180-125, 180+125, 180+125))
-                    patch = patch.resize((227, 227), Image.ANTIALIAS)
-                    patch_thetas.append(np.array(patch))
-                patches.append(patch_thetas)
-        return np.array(patches), np.array(boxes) #[number of patches,18, 250, 250, 3], [[x_s, y_s, x_e, y_e]]
+        return np.array(patches), np.array(boxes) #[number of patches, 360, 360, 3], [[x_s, y_s, x_e, y_e]]
 
     def close(self):
         self.sess.close()

@@ -22,8 +22,8 @@ class model:
             conv4b_init = net_data["conv4"][1]
             conv5W_init = net_data["conv5"][0]
             conv5b_init = net_data["conv5"][1]
-            #fc1W_init = tf.truncated_normal([1, 256], stddev=    0.01) 
-            #fc1b_init = tf.constant(0.1, shape=[256])
+            fc1W_init = tf.truncated_normal([1, 256], stddev=    0.01) 
+            fc1b_init = tf.constant(0.1, shape=[256])
             fc6W_init = tf.truncated_normal([9216, 4096], stddev=    0.01)
             fc6b_init = tf.constant(0.1, shape=[4096])
             fc7W_init = tf.truncated_normal([4096, 1024], stddev=    0.01)
@@ -41,8 +41,8 @@ class model:
             conv4b_init = tf.constant(0.1, shape=[384])
             conv5W_init = tf.truncated_normal([3, 3, 192, 256], stddev=    0.01)
             conv5b_init = tf.constant(0.1, shape=[256])
-            #fc1W_init = tf.truncated_normal([1, 256], stddev=    0.01)
-            #fc1b_init = tf.constant(0.1, shape=[256])
+            fc1W_init = tf.truncated_normal([1, 256], stddev=    0.01)
+            fc1b_init = tf.constant(0.1, shape=[256])
             fc6W_init = tf.truncated_normal([9216, 4096], stddev=    0.01)
             fc6b_init = tf.constant(0.1, shape=[4096])
             fc7W_init = tf.truncated_normal([4096, 1024], stddev=    0.01)
@@ -60,8 +60,8 @@ class model:
         self.conv4b = tf.Variable(conv4b_init,trainable=False, name='conv4b')
         self.conv5W = tf.Variable(conv5W_init,trainable=False, name='conv5W')
         self.conv5b = tf.Variable(conv5b_init,trainable=False, name='conv5b')
-        #self.fc1W = tf.Variable(fc1W_init, name='fc1W')
-        #self.fc1b = tf.Variable(fc1b_init, name='fc1b')
+        self.fc1W = tf.Variable(fc1W_init, name='fc1W')
+        self.fc1b = tf.Variable(fc1b_init, name='fc1b')
         self.fc6W = tf.Variable(fc6W_init, name='fc6W')
         self.fc6b = tf.Variable(fc6b_init, name='fc6b')
         self.fc7W = tf.Variable(fc7W_init, name='fc7W')
@@ -71,7 +71,7 @@ class model:
         self.dropfc6 = 1
         self.dropfc7 = 1
 
-    def inference(self, image_batch):
+    def inference(self, image_batch, indicators_batch):
         #conv1
         #conv(11, 11, 96, 4, 4, padding='VALID', name='conv1')
         k_h = 11; k_w = 11; c_o = 96; s_h = 4; s_w = 4
@@ -120,9 +120,9 @@ class model:
         maxpool5 = tf.nn.max_pool(conv5, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding) #[6,6,256]
 
         # Add indicator here to maxpool5
-        #fc1 = tf.nn.relu_layer(indicators_batch, self.fc1W, self.fc1b)
-        #fc1 = tf.reshape(fc1, shape=[-1, 1, 1, 256])
-        #maxpool5 = tf.add(tf.tile(fc1, [1, 6, 6, 1]), maxpool5)
+        fc1 = tf.nn.relu_layer(indicators_batch, self.fc1W, self.fc1b)
+        fc1 = tf.reshape(fc1, shape=[-1, 1, 1, 256])
+        maxpool5 = tf.add(tf.tile(fc1, [1, 6, 6, 1]), maxpool5)
 
         #fc6
         #fc(4096, name='fc6')
@@ -146,7 +146,7 @@ class model:
         self.conv3 = conv3
         self.conv4 = conv4
         self.conv5 = conv5
-        #self.fc1 = fc1
+        self.fc1 = fc1
         #End Debug
         return logits
 
