@@ -66,7 +66,7 @@ class Predictor:
                 x_pixel = i + patch_pixels/2
                 y_pixel = j + patch_pixels/2
                 location = np.array([x_pixel, y_pixel])*(277.0/880)
-                patch = image.resize((227, 227), Image.ANTIALIAS)
+                patch = np.array(image.resize((227, 227), Image.ANTIALIAS))
                 patch_thetas = np.tile(patch.reshape([1, 227, 227, 3]), [NUM_THETAS,1,1,1])
                 location_thetas = np.tile( location.reshape([1, 2]), [NUM_THETAS,1])
                 indicators = np.stack([location_thetas, INDICATORS], axis=1)
