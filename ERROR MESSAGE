@@ -1,0 +1,18 @@
+***************! 1 !***************
+***ITF-CEM***********************************
+complete CNN
+**********************************************
+Traceback (most recent call last):
+  File "CNN_grasp_server.py", line 305, in <module>
+    main(sys.argv)
+  File "CNN_grasp_server.py", line 301, in main
+    connect_robot(ip_port, connect_num)
+  File "CNN_grasp_server.py", line 292, in connect_robot
+    receive_from_robot(conn,iteration, confirm, fcsv, headers, img_saver, CNN)
+  File "CNN_grasp_server.py", line 238, in receive_from_robot
+    new_position = CNN.eval(img_00, position) #[x, y, theta]
+  File "/home/ancora-sirlab/as_DeepClaw_data/alpha_CNN-III_data/predictor.py", line 70, in eval
+    patch_thetas = np.tile( patch.reshape([1, 227, 227, 3]), [NUM_THETAS,1,1,1])
+  File "/usr/lib/python2.7/dist-packages/PIL/Image.py", line 528, in __getattr__
+    raise AttributeError(name)
+AttributeError: reshape
