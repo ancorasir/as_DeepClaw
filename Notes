@@ -1,0 +1,7 @@
+Each compressed file contains 30 grasps for 6 objects over 5 cycles
+
+4 compressed files in total, accounting for 120 grasp in total for a complete experiment
+
+2 experiments are conducted as the following
+- A total of 12 Old Toys are used in the experiment to verify Training Accuracy
+- A total of 12 New Toys are used in the experiment to veryfy Testing Accuracy
