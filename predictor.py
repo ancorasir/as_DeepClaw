@@ -65,11 +65,11 @@ class Predictor:
                 box = (i, j, i+patch_pixels, j+patch_pixels)
                 x_pixel = i + patch_pixels/2
                 y_pixel = j + patch_pixels/2
-                location = np.array([x_pixel, y_pixel])*(277.0/880)
+                location = np.array([x_pixel*(277.0/465) y_pixel]*(277.0/410))
                 patch = np.array(image.resize((227, 227), Image.ANTIALIAS))
                 patch_thetas = np.tile(patch.reshape([1, 227, 227, 3]), [NUM_THETAS,1,1,1])
-                location_thetas = np.tile( location.reshape([1, 2]), [NUM_THETAS,1])
-                indicators = np.stack([location_thetas, INDICATORS], axis=1)
+                location_thetas = np.tile( location.reshape([1, 2]), [NUM_THETAS,1]) #[NUM_THETAS,2]
+                indicators = np.concatenate([location_thetas, INDICATORS], axis=1) #[NUM_THETAS,3]
                 y_value = self.sess.run(self.y, feed_dict={self.images_batch: patch_thetas, self.indicators_batch: INDICATORS})
                 best_idx = np.argmax(y_value[:,1])
                 best_theta.append(INDICATORS[best_idx][0])
