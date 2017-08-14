@@ -65,7 +65,7 @@ class Predictor:
                 box = (i, j, i+patch_pixels, j+patch_pixels)
                 x_pixel = i + patch_pixels/2
                 y_pixel = j + patch_pixels/2
-                location = np.array([x_pixel*(277.0/465) y_pixel]*(277.0/410))
+                location = np.array([x_pixel*(277.0/465), y_pixel]*(277.0/410)).astype(int)
                 patch = np.array(image.resize((227, 227), Image.ANTIALIAS))
                 patch_thetas = np.tile(patch.reshape([1, 227, 227, 3]), [NUM_THETAS,1,1,1])
                 location_thetas = np.tile( location.reshape([1, 2]), [NUM_THETAS,1]) #[NUM_THETAS,2]
