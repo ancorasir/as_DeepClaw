@@ -13,21 +13,17 @@ NUM_BOXES = 12
 WIDTH = 360
 
 # load the trained network
-G = Predictor('./checkpoint_1000index')
+G = Predictor('./checkpoint_100index')
 
 images_list = glob.glob('./test_images/*.jpg')
 for j in range(len(images_list)):
     I = Image.open(images_list[j]).crop((100, 100, 1300, 1000))
-
     # draw sample grasp patches
     patches, boxes = G.generate_patches(I, NUM_BOXES, WIDTH)
-
     # calculate candicate grasp patch's best theta and probability
     candidates_theta, candidates_probability = G.eval_theta(patches)
-
     # select the best candicate grasp patch
     best_idx = np.argmax(candidates_probability)
-
     # draw the success probability
     draw = ImageDraw.Draw(I, 'RGBA')
     for i in range(len(boxes)):
@@ -41,8 +37,7 @@ for j in range(len(images_list)):
             best_theta = -(-3.14 + (candidates_theta[i]-0.5)*(3.14/9))
             draw.line([(x-r*np.cos(best_theta),y-r*np.sin(best_theta)),
                    (x+r*np.cos(best_theta), y+r*np.sin(best_theta))], fill=(255,255,255,125), width=10)
-
-    I.save('./test_images_grasp_1000/'+ images_list[j][14:])
+    I.save('./test_images_grasp_100/'+ images_list[j][14:])
     print('Successfully analyzed image: '+ images_list[j][14:])
 
 

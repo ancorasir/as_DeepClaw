@@ -9,7 +9,7 @@ import shutil
 rename_origin_folder = '/home/ancora-sirlab/wanfang/cropped_image/rename_origin_grasp_data_new'
 NUM_THETAS = 18
 
-# read grasp data prepared by label_graspCenter_isEmpty.py 
+# read grasp data prepared by label_graspCenter_isEmpty.py
 #data = pd.read_csv('./data_beta_grasp_data.csv')
 
 numbers = re.compile(r'(\d+)')
@@ -29,7 +29,7 @@ def _bytes_feature(value):
 
 def crop_image(src_folder, dis_folder):
     """
-    Crop image_00 and image_1, save cropped images in jpg format 
+    Crop image_00 and image_1, save cropped images in jpg format
     """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
@@ -50,7 +50,7 @@ def crop_image(src_folder, dis_folder):
         uppix = int(810-480*(x+0.73)/0.46)-50
         shft=180
         crop_box = (lftpix-shft,uppix-shft,lftpix+shft,uppix+shft)
-      
+
         # save cropped image in jpg
         image_00 = Image.open(all_images[i]).crop(crop_box)
         image_00.save(dis_folder + all_images[i][70:])
@@ -59,7 +59,7 @@ def crop_image(src_folder, dis_folder):
 
 def crop_image_beta(src_folder, dis_folder):
     """
-    Crop image_00, save cropped images in jpg format 
+    Crop image_00, save cropped images in jpg format
     """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
@@ -86,10 +86,10 @@ def crop_image_beta(src_folder, dis_folder):
         angle = all_data['rotate_angle'][i]
         x = coord[0]
         y = coord[1]
-        
+
         temp = np.matmul(M_robotToImage, np.array([[x,y,1]]).transpose())
         lftpix, uppix = (temp[:2,0]/temp[2,0]).astype(int)
-        
+
         shft = 125
         crop_box = (lftpix-shft,uppix-shft,lftpix+shft,uppix+shft)
 
@@ -103,7 +103,6 @@ def crop_image_beta(src_folder, dis_folder):
 def tf_writer(src_folder, dis_folder):
     """
     change the datas under src_folder into TFRecord fomat
-
     Args:
         src_folder: source folder with image and csv datas
         dis_folder: directory to save tfrecord file
@@ -111,22 +110,17 @@ def tf_writer(src_folder, dis_folder):
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
         os.mkdir(dis_folder)
-
-    data = pd.read_csv('./data_beta_grasp_data.csv')
-
+    data = pd.read_csv('./data_origin_grasp_data.csv')
     # list all images
     all_images = sorted(glob.glob(src_folder+'/*_00_color*.jpg'), key=numericalSort)
-
     for i in range(len(all_images)):
         if i%1000==0:
-            print('Writing %s.tfrecord'%(i/1000)) 
+            print('Writing %s.tfrecord'%(i/1000))
             if i!=0:
                 writer.close()
             writer = tf.python_io.TFRecordWriter(dis_folder+'/croppedImage_beta_%s'%(i/1000) + '.tfrecord')
-      
         # read cropped image in jpg
         img_00 = np.array(Image.open(all_images[i]).resize((227, 227), Image.ANTIALIAS)).tobytes()
-
         # save image and graps data into tfrecord files
         example = tf.train.Example(features=tf.train.Features(
             feature={
@@ -144,7 +138,7 @@ def tf_writer(src_folder, dis_folder):
 
 def select_success_grasp(src_folder, dis_folder):
     """
-    Select success grasp and save cropped image 00, 1 and 12 in dis_folder: 
+    Select success grasp and save cropped image 00, 1 and 12 in dis_folder:
     """
     if not os.path.isdir(dis_folder):
         print('dis folder not exist! now creating a new one ...')
@@ -155,9 +149,9 @@ def select_success_grasp(src_folder, dis_folder):
 
     for i in range(len(all_images)/2):
         if data['success'][i] == 1:
-            shutil.copy2(all_images[2*i], dis_folder)   
-            shutil.copy2(all_images[2*i+1], dis_folder)         
-            
+            shutil.copy2(all_images[2*i], dis_folder)
+            shutil.copy2(all_images[2*i+1], dis_folder)
+
             # determine the location of crop box
             coord = eval(data['move_1'][i][1:])
             angle = data['rotate_angle'][i]
@@ -177,7 +171,7 @@ def tf_writer_1(src_folder, dis_folder):
     """
     For each image_00, traverse all 19 indicators and generate 19 labels.
     Save image_00, and labels to tfrecord
-    
+
     Indicator: {0:no object in the grasp area, 1:[0,20) degrees with object in the grasp area, 2:[20,40)}
     Label:     {0:fail, 1:success, 2:unknown, 3:conflict}
 
@@ -249,4 +243,4 @@ def image_mean(src_folder):
 #image_mean('./croppedImage_jpg')
 
 #crop_image_beta('/home/ancora-sirlab/as_DeepClaw_data/beta_grasp_data/backuped-and-labeled-on-170718', './croppedImage_jpg_beta')
-tf_writer('./croppedImage_jpg_beta', './croppedImage_tfrecord')
+tf_writer('./croppedImage_jpg_alpha/croppedImage_jpg_alpha', './croppedImage_tfrecord')

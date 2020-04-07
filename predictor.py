@@ -22,6 +22,8 @@ G.close()
 import numpy as np
 import tensorflow as tf
 from graspNet import model
+from fc_graspNet import fcmodel
+
 from PIL import Image
 
 use_gpu_fraction = 0.8
@@ -84,7 +86,7 @@ class Predictor:
         new_xy = new[:2,0]/new[2,0]
         position[0] = new_xy[0]
         position[1] = new_xy[1]
-       
+
         # TODO, add the angle change between Xiatian's setting and our new setting
         # Xiatian's initial grasp plate is parallel to the bin with thumb near robot (--), clockwise rotation is positive 0 ~ pi, anti-clockwise is negative
         # our new initial grasp plate is parallel to the bin (Rz=zero when get_actual_joint_positions)
@@ -112,3 +114,25 @@ class Predictor:
     def close(self):
         self.sess.close()
 
+class Predictor_fc:
+    def __init__(self, checkpoint_path='./checkpoint', w=227, h=227):
+        self.checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+
+        # initialize prediction network for each patch
+        self.images_batch = tf.placeholder(tf.float32, shape=[-1, w, h, 3])
+
+        self.M = fcmodel()
+        self.M.initialize_network('./checkpoint')
+        logits = self.M.inference(self.images_batch)
+
+        self.y = tf.nn.softmax(logits)
+
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = use_gpu_fraction
+        self.sess = tf.Session(config = config)
+
+    def predict():
+
+
+    def close(self):
+        self.sess.close()
